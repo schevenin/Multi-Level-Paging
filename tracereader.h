@@ -3,16 +3,10 @@
  * Check and see if we are using C or C++ and include appropriately
  * so that this will compile under C and C++
  */
-#ifdef __cplusplus
 /* C++ includes */
 #include <stdint.h>
-#else
-/* C includes */
-#include <inttypes.h>
-#endif 
-
-
-typedef struct BYUADDRESSTRACE
+ 
+struct p2AddrTr
 {
   uint32_t addr;
   unsigned char reqtype;
@@ -20,7 +14,7 @@ typedef struct BYUADDRESSTRACE
   unsigned char attr;
   unsigned char proc;
   uint32_t time;
-} p2AddrTr;
+};
 
 typedef enum {
   UNKNOWN,
