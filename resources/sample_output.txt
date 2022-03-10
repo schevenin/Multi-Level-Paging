@@ -13,7 +13,6 @@ level 1 mask 0F000000
 level 2 mask 00FFF000
 
 ./pagingwithtlb -n 20 -o offset trace.tr 4 4 12
-00000760
 00000780
 00000740
 000002C0

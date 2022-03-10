@@ -1,0 +1,1 @@
+int cacheCapactiy; //capacity of the cache

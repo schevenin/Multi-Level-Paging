@@ -5,7 +5,8 @@
  */
 /* C++ includes */
 #include <stdint.h>
- 
+#include <cstdlib>
+#include <stdio.h>
 struct p2AddrTr
 {
   uint32_t addr;
@@ -51,3 +52,4 @@ int NextAddress(FILE *trace_file, p2AddrTr *addr_ptr);
 #define SMIACK			0x37	// acknowledge SMI mode
 						
 
+void AddressDecoder(p2AddrTr *addr_ptr, FILE *out);
