@@ -2,6 +2,7 @@
 #include "tracereader.h"
 #include "cache.h"
 #include "output_mode_helpers.h"
+#include <math.h> 
 #include <iostream>
 #include <unistd.h>
 
@@ -13,8 +14,13 @@ int main(int argc, char **argv)
     char *tracefile;
     int *entrycount;
     char* outputType = DEFAULTOUTPUTTYPE;
+    
     // initializes a page table
     PageTable *pagetable = new PageTable();
+    pagetable->offset = DEFAULTOFFSET;
+    //initialize OutputOptionsType
+    OutputOptionsType *output= new OutputOptionsType();
+    
     // runs through the optional arguments
     while ((opt = getopt(argc, argv, "n:c:o:")) != -1)
     {
@@ -34,7 +40,7 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-    std::cout << outputType;
+    
     
     // need at least 2 arguements
     if (argc - optind < 2)
@@ -48,10 +54,13 @@ int main(int argc, char **argv)
     // gets mandatory arguments for levels
     for (int i = optind; i < argc; i++)
     {
-        pagetable->numLevels++;
+        pagetable->numLevels++; //sets number of levels
         pagetable->numbits.push_back(atoi(argv[i])); // grabs amount of bits for each level
+        pagetable->offset -= (atoi(argv[i])); //gets offset by subtracting each page size
     }
 
+    pagetable->pageSize = pow(2,pagetable->offset);  //get size = 2^offset 
+    std::cout << "Page Size" << pagetable->pageSize; //eventually update to summary in output_mode_helper
     return 0;
 };
 
