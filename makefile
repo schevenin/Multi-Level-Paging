@@ -16,7 +16,7 @@ CXXFLAGS=-std=c++11 -g -pthread
 # make target specifies a specific target
 # $^ is an example of a special variable.  It substitutes all dependencies
 a.out : Driver.o tracereader.o output_mode_helpers.o
-	$(CXX) $(CXXFLAGS) -o dicttest $^
+	$(CXX) $(CXXFLAGS) -o a.out $^
 output_mode_helpers.o : output_mode_helpers.cpp
 tracereader.o : tracereader.h tracereader.cpp 
 Driver.o : tracereader.h Driver.cpp
