@@ -14,10 +14,14 @@ int main(int argc, char **argv)
 {
     int opt;                              // necessary optional argument
     FILE *tracefile;                      // tracefile
+    FILE *addressOutput;                  // what we need to process
+    addressOutput = fopen("addressOutput", "w");
     char *tracefileName;                  // tracefilename
     char *outputType = DEFAULTOUTPUTTYPE; // initialize outputType
-     unsigned long i = 0;  /* instructions processed */
+    unsigned long i = 0;                  /* instructions processed */
     p2AddrTr trace;
+    Map temp; //creates temp map to update map array in level.h
+    uint32_t frame;
     // initializes a page table
     PageTable *pagetable = new PageTable();
     pagetable->offset = DEFAULTOFFSET;
@@ -36,11 +40,11 @@ int main(int argc, char **argv)
             pagetable->numberofAddresses = atoi(optarg);
             break;
         case 'c':
-            //gets cache capacity of adresses
+            // gets cache capacity of adresses
             cacheCapactiy = atoi(optarg);
             break;
         case 'o':
-            //gets type of output
+            // gets type of output
             outputType = optarg;
             break;
         default:
@@ -58,62 +62,36 @@ int main(int argc, char **argv)
 
     // gets mandatory arguments for levels
     for (int i = optind; i < argc; i++)
-    {
+    { 
         pagetable->numLevels++;                      // sets number of levels
         pagetable->numbits.push_back(atoi(argv[i])); // grabs amount of bits for each level
         pagetable->offset -= (atoi(argv[i]));        // gets offset by subtracting each page size
     }
-    if ((tracefile = fopen(tracefileName, "rb")) == NULL) {
-    fprintf(stderr,"cannot open %s for reading\n",argv[1]);
-    exit(1);
-  }
-    while (!feof(tracefile) && i!=pagetable->numberofAddresses)
+
+    pagetable->LevelPtr = new Level[pagetable->numLevels];
+
+    //checks if the tracefile is real
+    if ((tracefile = fopen(tracefileName, "rb")) == NULL)
     {
-        
+        fprintf(stderr, "cannot open %s for reading\n", argv[1]);
+        exit(1);
+    }
+
+    while (!feof(tracefile) && i != pagetable->numberofAddresses)
+    {
         /* get next address and process */
         if (NextAddress(tracefile, &trace))
         {
-            AddressDecoder(&trace, stdout);
-            i++; //ensures correct amount of addreesses are processed
+            temp.frame = frame;
+            frame++;
+            
+            pagetable->LevelPtr->map.push_back(temp);
+            report_virtual2physical(trace.addr, frame);
+            i++; // ensures correct amount of addreesses are processed
         }
     }
+    fclose(tracefile);
     pagetable->pageSize = pow(2, pagetable->offset);    // get size = 2^offset
     report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
-
-// STUFF BELOW IS FOR GRAABBING ADDRESSES OF TRACEFILES AND STUFF
-
-// FILE *ifp;           /* trace file */
-// unsigned long i = 0; /* instructions processed */
-// p2AddrTr trace;      /* traced address */
-
-// /* check usage */
-// if (argc != 2)
-// {
-//     fprintf(stderr, "usage: %s input_byutr_file\n", argv[0]);
-//     exit(1);
-// }
-
-// /* attempt to open trace file */
-// if ((ifp = fopen(argv[1], "rb")) == NULL)
-// {
-//     fprintf(stderr, "cannot open %s for reading\n", argv[1]);
-//     exit(1);
-// }
-
-// while (!feof(ifp))
-// {
-//     /* get next address and process */
-//     if (NextAddress(ifp, &trace))
-//     {
-//         AddressDecoder(&trace, stdout);
-//         i++;
-//         // std::cout<< &trace;
-//         if ((i % 100000) == 0)
-//             fprintf(stderr, "%dK samples processed\r", i / 100000);
-//     }
-// }
-
-// /* clean up and return success */
-// fclose(ifp);

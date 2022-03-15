@@ -7,11 +7,11 @@
 #include "map.h"
 
 struct Level{
-Level *nextLevel; //Array of Level* pointers to the next level. (non-leaf or interior level)
-Map *map; //array of MAP objects, each mapping a logical/virtual page to a physical frame. (leaf level)
-struct PageTable *PageRoot;
+//struct PageTable *PageRoot;
+//Level *nextLevel; //Array of Level* pointers to the next level. (non-leaf or interior level)
+std::vector<Map> map; //array of MAP objects, each mapping a logical/virtual page to a physical frame. (leaf level)
 };
 
-void pageInsert(PageTable page, uint32_t address, uint32_t frame); //inserts the page into the level
+//void pageInsert(PageTable page, uint32_t address, uint32_t frame); //inserts the page into the level
 
 #endif

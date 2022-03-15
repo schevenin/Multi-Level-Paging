@@ -5,10 +5,11 @@
 #include <stdint.h>
 #include <vector>
 #include "pagetable.h"
+#include "level.h"
 #define NONUMBEROFARGUMENTS -1
 #define DEFAULTOFFSET 32
 struct PageTable{
-  struct Level *LevelPtr;
+  struct Level *LevelPtr; //pointer to level struct
   int numLevels;  /* number of levels*/
   int* bitmask; //creates an array of bitmasks
   int* bitshift; //creates an array of bitshifts for each level
