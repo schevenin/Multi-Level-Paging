@@ -77,21 +77,38 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    pagetable->pageSize = pow(2, pagetable->offset);    // get size = 2^offset
+    pagetable->bitmask = new int[pagetable->numLevels]; //initialize bitmask array
+    //CREATE BITMASK
+    for (size_t i = 0; i < pagetable->numLevels; i++)
+    {
+
+        pagetable->bitmask[i] =((1 << pagetable->numbits[i]) - 1) <<pagetable->offset;
+        std::cout<< pagetable->bitmask[i]<<std::endl;
+        //std::cout<<pagetable->numbits[i]<<std::endl;
+    }
+    
     while (!feof(tracefile) && i != pagetable->numberofAddresses)
     {
+
         /* get next address and process */
         if (NextAddress(tracefile, &trace))
         {
-            temp.frame = frame;
-            frame++;
             
-            pagetable->LevelPtr->map.push_back(temp);
-            report_virtual2physical(trace.addr, frame);
+            //std::cout <<(trace.addr>>20)<<std::endl;
+            temp.frame = pagetable->bitmask[0] & trace.addr;
+            //frame++;
+            int Page = (pagetable->bitmask[0] &trace.addr);
+            Page = Page >> pagetable->offset;
+            std::cout<<Page<<std::endl;
+            //std::cout<<pagetable->offset<<std::endl;
+            //pagetable->LevelPtr->map.push_back(temp);
+            //report_virtual2physical(trace.addr, temp.frame);
             i++; // ensures correct amount of addreesses are processed
         }
     }
     fclose(tracefile);
-    pagetable->pageSize = pow(2, pagetable->offset);    // get size = 2^offset
-    report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
+    
+   // report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
