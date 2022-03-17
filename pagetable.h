@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <vector>
 #include <iostream>
-#include "pagetable.h"
+
 #include "level.h"
 #include "tracereader.h"
 
@@ -21,7 +21,7 @@ struct PageTable
   std::vector<int> numbits; // creates an vetor that holds the number of bits for each level
   int numberofAddresses;
 
-  
+
   Map temp; //creates temp map to update map array in level.h
   uint32_t frame;
   int offset;            // gets offset of addresses
@@ -29,12 +29,13 @@ struct PageTable
   FILE *tracefile;
   char *tracefileName;
   unsigned long instructionsProcessed = 0; // instructions
-  p2AddrTr trace;
+  p2AddrTr *trace;
 };
 
-Map *pageLookup(PageTable *pageTable, unsigned int vritualAddress);
-void pageInsert(PageTable *page, uint32_t address, uint32_t frame); // inserts the page into the pagetable
+Map pageLookup(PageTable *pageTable, unsigned int vritualAddress);
+void pageInsert(PageTable *page, uint32_t address, uint32_t frame);
 
 void createBitmaskPageNumber(PageTable *page); // creates bitmask page number
 void createBitmaskOffset(PageTable *page);     // creates bitmask offset
+
 #endif

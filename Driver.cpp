@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     PageTable *pagetable = new PageTable();
     ProcessArguments(argc, argv, pagetable);
     
-    pageInsert(pagetable, pagetable->trace.addr, pagetable->frame);
+    pageInsert(pagetable, &pagetable->trace, pagetable->frame);
 
 
 
