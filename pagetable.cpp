@@ -2,34 +2,35 @@
 
 void pageInsert(PageTable *page, uint32_t address, uint32_t frame)
 {
-   while (!feof(page->tracefile) && page->instructionsProcessed != page->numberofAddresses)
-   {
-      /* get next address and process */
+   /* get next address and process */
       if (NextAddress(page->tracefile, page->trace))
       {
-
          createBitmaskPageNumber(page);
-         page->temp.frame = page->bitmask[0] & page->trace->addr;
-         frame++;
-         int Page = (page->bitmask[0] &page->trace->addr);
-         Page = Page >> page->offset;
+         page->virtualPageNumber = page->bitmask[0] & page->trace->addr;
+         page->virtualPageNumber = page->virtualPageNumber >> page->offsetSize;
+         // frame++;
+         
          //std::cout<<page->temp.frame<<std::endl;
-         report_virtual2physical(page->trace->addr, page->temp.frame);
+         
+         std::cout << std::hex << page->virtualPageNumber << std::endl;
+         
+         
+         //report_virtual2physical(page->trace->addr, page->temp.frame);
+         
+         
          //std::cout<<pagetable->offset<<std::endl;
          //pagetable->LevelPtr->map.push_back(temp);
          
         page->instructionsProcessed++; // ensures correct amount of addreesses are processed
       }
-   }
-};
+}
 
 void createBitmaskPageNumber(PageTable *page)
 {
 
    for (size_t i = 0; i < page->numLevels; i++)
    {
-      page->bitmask[i] = ((1 << page->numbits[i]) - 1) << page->offset;
-      //std::cout << page->bitmask[i] << std::endl;
+      page->bitmask[i] = ((1 << page->numbits[i]) - 1) << page->offsetSize;
 
       // std::cout<<pagetable->numbits[i]<<std::endl;
    }

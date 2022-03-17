@@ -10,7 +10,7 @@
 void ProcessArguments(int argc, char **argv, PageTable *pagetable) {
     
     // default settings
-    pagetable->offset = DEFAULTOFFSET;
+    pagetable->offsetSize = DEFAULTOFFSET;
     pagetable->numberofAddresses = NONUMBEROFARGUMENTS;
 
     // for output
@@ -53,7 +53,8 @@ void ProcessArguments(int argc, char **argv, PageTable *pagetable) {
     { 
         pagetable->numLevels++;                      // sets number of levels
         pagetable->numbits.push_back(atoi(argv[i])); // grabs amount of bits for each level
-        pagetable->offset -= (atoi(argv[i]));        // gets offset by subtracting each page size
+        pagetable->totalPageBits+=(atoi(argv[i]));
+        pagetable->offsetSize -= (atoi(argv[i]));        // gets offset by subtracting each page size
     }
 
     // verify working tracefile
@@ -65,7 +66,7 @@ void ProcessArguments(int argc, char **argv, PageTable *pagetable) {
     }
 
     // finally, assign pagetable variables
-    pagetable->pageSize = pow(2, pagetable->offset);    // get size = 2^offset
+    pagetable->pageSize = pow(2, pagetable->offsetSize);    // get size = 2^offset
     pagetable->bitmask = new int[pagetable->numLevels]; //initialize bitmask array
     pagetable->LevelPtr = new Level[pagetable->numLevels]; //initialize level array
 };
@@ -80,12 +81,18 @@ int main(int argc, char **argv)
     PageTable *pagetable = new PageTable();
     ProcessArguments(argc, argv, pagetable);
     pagetable->trace = new p2AddrTr();
-    pageInsert(pagetable, pagetable->trace->addr, pagetable->frame);
+
+    while (!feof(pagetable->tracefile) && pagetable->instructionsProcessed != pagetable->numberofAddresses)
+    {
+        pageInsert(pagetable, pagetable->trace->addr, pagetable->frame);
+    }
+
+    
 
  
 
-    //report_virtual2physical(pagetable->trace->addr, pagetable->temp.frame);
-    report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
+    
+    //report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
 

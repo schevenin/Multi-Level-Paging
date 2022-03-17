@@ -25,7 +25,10 @@ struct PageTable
 
   Map temp; //creates temp map to update map array in level.h
   uint32_t frame;
-  int offset;            // gets offset of addresses
+  int virtualPageNumber;
+  int totalPageBits;
+  int offset;
+  int offsetSize;            // gets offset of addresses
   int pageSize;          // gets pagesize
   FILE *tracefile;
   char *tracefileName;
