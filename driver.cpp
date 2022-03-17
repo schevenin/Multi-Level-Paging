@@ -12,7 +12,6 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     // default settings
     pageTable->offsetSize = DEFAULTOFFSET;
     pageTable->numberofAddresses = NONUMBEROFARGUMENTS;
-
     // for output
     char *outputType = DEFAULTOUTPUTTYPE;
     
@@ -53,10 +52,11 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     { 
         pageTable->numLevels++;                      // sets number of levels
         pageTable->numBits.push_back(atoi(argv[i])); // grabs amount of bits for each level
-        pageTable->totalPageBits += (atoi(argv[i]));
+        pageTable->totalPageBits += atoi(argv[i]); 
         pageTable->offsetSize -= (atoi(argv[i]));        // gets offset by subtracting each page size
+        pageTable->bitshift.push_back(DEFAULTSIZE - pageTable->totalPageBits);
     }
-
+    pageTable->bitshift.push_back(0); //adds bitshift for offset which is 0
     // verify working tracefile
     pageTable->tracefile = fopen(pageTable->tracefileName, "rb");
     if (pageTable->tracefile == NULL)

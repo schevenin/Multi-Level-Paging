@@ -12,13 +12,14 @@
 
 #define NONUMBEROFARGUMENTS -1
 #define DEFAULTOFFSET 32
+#define DEFAULTSIZE 32
 
 struct PageTable
 {
   struct Level *LevelPtr;   // pointer to level struct
   int numLevels;            /* number of levels*/
   uint32_t *bitmask;             // creates an array of bitmasks
-  int *bitshift;            // creates an array of bitshifts for each level
+  std::vector<int> bitshift;            // creates an array of bitshifts for each level
   std::vector<uint32_t> numBits; // creates an vetor that holds the number of bits for each level
   int numberofAddresses;
 
@@ -29,7 +30,6 @@ struct PageTable
   int totalPageBits;
   int offset;
   uint32_t offsetMask;
-  int bitsProcessed;
   int offsetSize;            // gets offset of addresses
   int pageSize;          // gets pagesize
   FILE *tracefile;
