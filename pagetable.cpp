@@ -2,24 +2,23 @@
 
 void pageInsert(PageTable *page, uint32_t address, uint32_t frame)
 {
-
    while (!feof(page->tracefile) && page->instructionsProcessed != page->numberofAddresses)
    {
       /* get next address and process */
-      if (NextAddress(page->tracefile, address))
+      if (NextAddress(page->tracefile, page->trace))
       {
 
-         std::cout <<(trace.addr>>20)<<std::endl;
-          page->temp.frame = page->bitmask[0] & address;
-          //frame++;
-          int Page = (page->bitmask[0] &address);
-          Page = Page >> page->offset;
-          std::cout<<Page<<std::endl;
+         createBitmaskPageNumber(page);
+         page->temp.frame = page->bitmask[0] & address;
+         frame++;
+         int Page = (page->bitmask[0] &address);
+         Page = Page >> page->offset;
+         //std::cout<<page->temp.frame<<std::endl;
 
-         // std::cout<<pagetable->offset<<std::endl;
-         // pagetable->LevelPtr->map.push_back(temp);
-         // report_virtual2physical(trace.addr, temp.frame);
-         page->instructionsProcessed++; // ensures correct amount of addreesses are processed
+         //std::cout<<pagetable->offset<<std::endl;
+         //pagetable->LevelPtr->map.push_back(temp);
+        // report_virtual2physical(trace.addr, temp.frame);
+        page->instructionsProcessed++; // ensures correct amount of addreesses are processed
       }
    }
 };

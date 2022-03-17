@@ -80,8 +80,8 @@ int main(int argc, char **argv)
     // handle and process arguments
     PageTable *pagetable = new PageTable();
     ProcessArguments(argc, argv, pagetable);
-    
-    pageInsert(pagetable, &pagetable->trace, pagetable->frame);
+    pagetable->trace = new p2AddrTr();
+    pageInsert(pagetable, pagetable->trace->addr, pagetable->frame);
 
 
 
