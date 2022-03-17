@@ -8,6 +8,8 @@ void pageInsert(PageTable *page, uint32_t address, uint32_t frame)
          createBitmaskPageNumber(page);
          page->virtualPageNumber = page->bitmask[0] & page->trace->addr;
          page->virtualPageNumber = page->virtualPageNumber >> page->offsetSize;
+         
+         
          // frame++;
          
          //std::cout<<page->temp.frame<<std::endl;
@@ -27,7 +29,6 @@ void pageInsert(PageTable *page, uint32_t address, uint32_t frame)
 
 void createBitmaskPageNumber(PageTable *page)
 {
-
    for (size_t i = 0; i < page->numLevels; i++)
    {
       page->bitmask[i] = ((1 << page->numbits[i]) - 1) << page->offsetSize;
