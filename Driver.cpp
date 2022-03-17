@@ -85,8 +85,8 @@ int main(int argc, char **argv)
 
 
 
-
-   // report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
+    report_virtual2physical(page->trace->addr, page->temp.frame);
+   report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
 
