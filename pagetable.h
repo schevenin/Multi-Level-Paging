@@ -8,6 +8,7 @@
 
 #include "level.h"
 #include "tracereader.h"
+#include "output_mode_helpers.h"
 
 #define NONUMBEROFARGUMENTS -1
 #define DEFAULTOFFSET 32

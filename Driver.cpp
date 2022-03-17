@@ -1,6 +1,5 @@
 #include "pagetable.h"
 #include "cache.h"
-#include "output_mode_helpers.h"
 
 #include <math.h>
 #include <fstream>
@@ -85,8 +84,8 @@ int main(int argc, char **argv)
 
 
 
-    report_virtual2physical(page->trace->addr, page->temp.frame);
-   report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
+    //report_virtual2physical(pagetable->trace->addr, pagetable->temp.frame);
+    report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
 

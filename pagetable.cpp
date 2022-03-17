@@ -9,12 +9,12 @@ void pageInsert(PageTable *page, uint32_t address, uint32_t frame)
       {
 
          createBitmaskPageNumber(page);
-         page->temp.frame = page->bitmask[0] & address;
+         page->temp.frame = page->bitmask[0] & page->trace->addr;
          frame++;
-         int Page = (page->bitmask[0] &address);
+         int Page = (page->bitmask[0] &page->trace->addr);
          Page = Page >> page->offset;
          //std::cout<<page->temp.frame<<std::endl;
-
+         report_virtual2physical(page->trace->addr, page->temp.frame);
          //std::cout<<pagetable->offset<<std::endl;
          //pagetable->LevelPtr->map.push_back(temp);
          
@@ -29,7 +29,7 @@ void createBitmaskPageNumber(PageTable *page)
    for (size_t i = 0; i < page->numLevels; i++)
    {
       page->bitmask[i] = ((1 << page->numbits[i]) - 1) << page->offset;
-      std::cout << page->bitmask[i] << std::endl;
+      //std::cout << page->bitmask[i] << std::endl;
 
       // std::cout<<pagetable->numbits[i]<<std::endl;
    }
