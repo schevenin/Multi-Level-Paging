@@ -78,13 +78,17 @@ int main(int argc, char **argv)
     OutputOptionsType *output = new OutputOptionsType();
 
     // handle and process arguments
-    PageTable *pagetable = new PageTable();
-    ProcessArguments(argc, argv, pagetable);
-    pagetable->trace = new p2AddrTr();
+    PageTable *pageTable = new PageTable();
+    ProcessArguments(argc, argv, pageTable);
+    pageTable->trace = new p2AddrTr();
 
-    while (!feof(pagetable->tracefile) && pagetable->instructionsProcessed != pagetable->numberofAddresses)
+    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed != pageTable->numberofAddresses)
     {
-        pageInsert(pagetable, pagetable->trace->addr, pagetable->frame);
+        std::cout << "Page Insert" << std::endl;
+        std::cout << "Trace Address: " << std::hex << pageTable->trace->addr << std::endl;
+        std::cout << "Frame: " << std::hex << pageTable->frame << std::endl;
+        std::cout << std::endl;
+        pageInsert(pageTable, pageTable->trace->addr, pageTable->frame);
     }
 
     

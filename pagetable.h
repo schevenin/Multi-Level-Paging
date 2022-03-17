@@ -37,9 +37,9 @@ struct PageTable
 };
 
 Map pageLookup(PageTable *pageTable, unsigned int vritualAddress);
-void pageInsert(PageTable *page, uint32_t address, uint32_t frame);
+void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame);
 
-void createBitmaskPageNumber(PageTable *page); // creates bitmask page number
-void createBitmaskOffset(PageTable *page);     // creates bitmask offset
+void createBitmaskPageNumber(PageTable *pageTable); // creates bitmask page number
+void createBitmaskOffset(PageTable *pageTable);     // creates bitmask offset
 
 #endif
