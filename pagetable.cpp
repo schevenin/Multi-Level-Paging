@@ -11,15 +11,17 @@ void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
       /* get next address and process */
       if (NextAddress(pageTable->tracefile, pageTable->trace))
       {
-         pageTable->virtualPageNumber = pageTable->bitmask[i] & pageTable->trace->addr;
-         pageTable->virtualPageNumber = pageTable->virtualPageNumber >> (pageTable->bitshift[i]);
+         pageTable->virtualPageNumber = virtualAddressToPageNum(pageTable->trace->addr, pageTable->bitmask[i], (pageTable->bitshift[i]));
+
+       //  pageTable->virtualPageNumber = pageTable->bitmask[i] & pageTable->trace->addr;
+       //  pageTable->virtualPageNumber = pageTable->virtualPageNumber >> (pageTable->bitshift[i]);
         // std::cout << "Masked Result (" << i << "): " << (pageTable->virtualPageNumber) << std::endl;
 
          // frame++;
          
          //std::cout<<page->temp.frame<<std::endl;
          
-         std::cout << std::hex << pageTable->virtualPageNumber << std::endl;
+         std::cout << "Virtual Page Number at Level ("<< i<< ") "<< pageTable->virtualPageNumber << std::endl;
          
          
          //report_virtual2physical(page->trace->addr, page->temp.frame);
@@ -72,10 +74,10 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
    // uint32_t byte3 = (value >> 8)  & 0xff;    // 0x01020304 >> 8 is 0x010203 so
    //                                           // we must mask to get 0x03
    // uint32_t byte4 = value & 0xff;            // here we only mask, no shifting
-
+   
    uint32_t result;
-
-   result = (virtualAddress >> shift) & mask;
+   result = mask & virtualAddress;
+   result = result >> shift;
 
    return result;
 }
