@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     pagetable->trace = new p2AddrTr();
     pageInsert(pagetable, pagetable->trace->addr, pagetable->frame);
 
-
+ 
 
     //report_virtual2physical(pagetable->trace->addr, pagetable->temp.frame);
     report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
