@@ -30,10 +30,9 @@ void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
          //std::cout<<pagetable->offset<<std::endl;
          //pagetable->LevelPtr->map.push_back(temp);
          
-         pageTable->instructionsProcessed++; // ensures correct amount of addreesses are processed
       }
    }
-   
+   pageTable->instructionsProcessed++; // ensures correct amount of addreesses are processed
 }
 
 void createBitmaskPageNumber(PageTable *pageTable)

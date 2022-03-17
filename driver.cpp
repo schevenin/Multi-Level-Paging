@@ -88,11 +88,12 @@ int main(int argc, char **argv)
 
 
     // insert into pages
-    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed != pageTable->numberofAddresses)
+    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= pageTable->numberofAddresses)
     {
         pageInsert(pageTable, pageTable->trace->addr, pageTable->frame);
        // std::cout << "Page Insert: " << std::hex << pageTable->trace->addr << " -> " << std::hex << pageTable->frame << std::endl;
-       // std::cout << "=================================" << std::endl;
+        std::cout << "=================================" << pageTable->numberofAddresses<< std::endl;
+        std::cout << "=================================" << pageTable->instructionsProcessed<< std::endl;
     }
 
 
