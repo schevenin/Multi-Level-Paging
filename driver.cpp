@@ -11,7 +11,7 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     
     // default settings
     pageTable->offsetSize = DEFAULTOFFSET;
-    pageTable->numberofAddresses = NONUMBEROFARGUMENTS;
+    pageTable->numberOfAddresses = NONUMBEROFARGUMENTS;
     // for output
     char *outputType = DEFAULTOUTPUTTYPE;
     
@@ -23,7 +23,7 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
         {
         case 'n':
             // sets number of addresses needed to go through
-            pageTable->numberofAddresses = atoi(optarg);
+            pageTable->numberOfAddresses = atoi(optarg);
             break;
         case 'c':
             // gets cache capacity of adresses
@@ -69,6 +69,16 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     pageTable->pageSize = pow(2, pageTable->offsetSize);    // get size = 2^offset
     pageTable->bitmask = new uint32_t[pageTable->numLevels]; //initialize bitmask array
     pageTable->LevelPtr = new Level[pageTable->numLevels]; //initialize level array
+    
+    // offset mask
+    pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;
+
+    // VPN mask
+    for (int i = 0; i < pageTable->numLevels; i++)
+   {
+      pageTable->bitmask[i] = (1 << pageTable->numBits[i]) - 1;
+      pageTable->bitmask[i] = pageTable->bitmask[i] << (pageTable->bitshift[i]);
+   }
 };
 
 int main(int argc, char **argv)
@@ -82,22 +92,11 @@ int main(int argc, char **argv)
     ProcessArguments(argc, argv, pageTable);
     pageTable->trace = new p2AddrTr();
 
-
-
-
-
-
     // insert into pages
-    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= pageTable->numberofAddresses)
+    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= pageTable->numberOfAddresses)
     {
         pageInsert(pageTable, pageTable->trace->addr, pageTable->frame);
-       // std::cout << "Page Insert: " << std::hex << pageTable->trace->addr << " -> " << std::hex << pageTable->frame << std::endl;
-        std::cout << "=================================" << pageTable->numberofAddresses<< std::endl;
-        std::cout << "=================================" << pageTable->instructionsProcessed<< std::endl;
     }
-
-
-
 
 
 

@@ -21,14 +21,14 @@ struct PageTable
   uint32_t *bitmask;             // creates an array of bitmasks
   std::vector<int> bitshift;            // creates an array of bitshifts for each level
   std::vector<uint32_t> numBits; // creates an vetor that holds the number of bits for each level
-  int numberofAddresses;
+  int numberOfAddresses;
 
 
   Map temp; //creates temp map to update map array in level.h
   uint32_t frame;
   int virtualPageNumber;
   int totalPageBits;
-  int offset;
+  uint32_t offset;
   uint32_t offsetMask;
   int offsetSize;            // gets offset of addresses
   int pageSize;          // gets pagesize
@@ -40,9 +40,6 @@ struct PageTable
 
 Map pageLookup(PageTable *pageTable, unsigned int vritualAddress);
 void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame);
-
-void createBitmaskPageNumber(PageTable *pageTable); // creates bitmask page number
-void createBitmaskOffset(PageTable *pageTable);     // creates bitmask offset
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
 
