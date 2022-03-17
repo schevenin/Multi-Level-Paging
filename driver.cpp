@@ -82,6 +82,11 @@ int main(int argc, char **argv)
     ProcessArguments(argc, argv, pageTable);
     pageTable->trace = new p2AddrTr();
 
+
+
+
+
+
     // insert into pages
     while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed != pageTable->numberofAddresses)
     {
@@ -89,6 +94,11 @@ int main(int argc, char **argv)
        // std::cout << "Page Insert: " << std::hex << pageTable->trace->addr << " -> " << std::hex << pageTable->frame << std::endl;
        // std::cout << "=================================" << std::endl;
     }
+
+
+
+
+
 
 
 

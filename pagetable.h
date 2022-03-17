@@ -44,4 +44,6 @@ void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame);
 void createBitmaskPageNumber(PageTable *pageTable); // creates bitmask page number
 void createBitmaskOffset(PageTable *pageTable);     // creates bitmask offset
 
+uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
+
 #endif
