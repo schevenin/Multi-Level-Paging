@@ -1,36 +1,24 @@
 #include "pagetable.h"
-#include "tracereader.h"
 #include "cache.h"
 #include "output_mode_helpers.h"
+
 #include <math.h>
-#include <iostream>
 #include <fstream>
-#include <unistd.h>
 #include <unistd.h>
 
 /* NEED TO INITIALIZE ALL VARIABLES IN PAGETABLE WITH GIVEN VALUES/DEFAULTS*/
 
-int main(int argc, char **argv)
-{
-    int opt;                              // necessary optional argument
-    FILE *tracefile;                      // tracefile
-    FILE *addressOutput;                  // what we need to process
-    addressOutput = fopen("addressOutput", "w");
-    char *tracefileName;                  // tracefilename
-    char *outputType = DEFAULTOUTPUTTYPE; // initialize outputType
-    unsigned long i = 0;                  /* instructions processed */
-    p2AddrTr trace;
-    Map temp; //creates temp map to update map array in level.h
-    uint32_t frame;
-    // initializes a page table
-    PageTable *pagetable = new PageTable();
+void ProcessArguments(int argc, char **argv, PageTable *pagetable) {
+    
+    // default settings
     pagetable->offset = DEFAULTOFFSET;
     pagetable->numberofAddresses = NONUMBEROFARGUMENTS;
 
-    // initialize OutputOptionsType
-    OutputOptionsType *output = new OutputOptionsType();
-
-    // runs through the optional arguments
+    // for output
+    char *outputType = DEFAULTOUTPUTTYPE;
+    
+    // check optional arguments
+    int opt;
     while ((opt = getopt(argc, argv, "n:c:o:")) != -1)
     {
         switch (opt)
@@ -52,15 +40,16 @@ int main(int argc, char **argv)
         }
     }
 
-    // need at least 2 arguements
+    // require 2 arguments
     if (argc - optind < 2)
     {
         fprintf(stderr, "%s: too few arguments\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    tracefileName = argv[optind++]; // gets tracefile name
+    pagetable->tracefileName = argv[optind++]; // gets tracefile name
 
-    // gets mandatory arguments for levels
+    
+    // check mandatory arguments
     for (int i = optind; i < argc; i++)
     { 
         pagetable->numLevels++;                      // sets number of levels
@@ -68,47 +57,36 @@ int main(int argc, char **argv)
         pagetable->offset -= (atoi(argv[i]));        // gets offset by subtracting each page size
     }
 
-    pagetable->LevelPtr = new Level[pagetable->numLevels];
-
-    //checks if the tracefile is real
-    if ((tracefile = fopen(tracefileName, "rb")) == NULL)
+    // verify working tracefile
+    pagetable->tracefile = fopen(pagetable->tracefileName, "rb");
+    if (pagetable->tracefile == NULL)
     {
-        fprintf(stderr, "cannot open %s for reading\n", argv[1]);
+        fprintf(stderr, "cannot open %s for reading\n", pagetable->tracefileName);
         exit(1);
     }
 
+    // finally, assign pagetable variables
     pagetable->pageSize = pow(2, pagetable->offset);    // get size = 2^offset
     pagetable->bitmask = new int[pagetable->numLevels]; //initialize bitmask array
-    //CREATE BITMASK
-    for (size_t i = 0; i < pagetable->numLevels; i++)
-    {
+    pagetable->LevelPtr = new Level[pagetable->numLevels]; //initialize level array
+};
 
-        pagetable->bitmask[i] =((1 << pagetable->numbits[i]) - 1) <<pagetable->offset;
-        std::cout<< pagetable->bitmask[i]<<std::endl;
-        //std::cout<<pagetable->numbits[i]<<std::endl;
-    }
-    
-    while (!feof(tracefile) && i != pagetable->numberofAddresses)
-    {
+int main(int argc, char **argv)
+{    
 
-        /* get next address and process */
-        if (NextAddress(tracefile, &trace))
-        {
-            
-            //std::cout <<(trace.addr>>20)<<std::endl;
-            temp.frame = pagetable->bitmask[0] & trace.addr;
-            //frame++;
-            int Page = (pagetable->bitmask[0] &trace.addr);
-            Page = Page >> pagetable->offset;
-            std::cout<<Page<<std::endl;
-            //std::cout<<pagetable->offset<<std::endl;
-            //pagetable->LevelPtr->map.push_back(temp);
-            //report_virtual2physical(trace.addr, temp.frame);
-            i++; // ensures correct amount of addreesses are processed
-        }
-    }
-    fclose(tracefile);
+    // initialize OutputOptionsType
+    OutputOptionsType *output = new OutputOptionsType();
+
+    // handle and process arguments
+    PageTable *pagetable = new PageTable();
+    ProcessArguments(argc, argv, pagetable);
     
+    pageInsert(pagetable, pagetable->trace.addr, pagetable->frame);
+
+
+
+
    // report_summary(pagetable->pageSize, 0, 0, i, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
+
