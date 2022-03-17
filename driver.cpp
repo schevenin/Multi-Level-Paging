@@ -67,7 +67,7 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
 
     // finally, assign pagetable variables
     pageTable->pageSize = pow(2, pageTable->offsetSize);    // get size = 2^offset
-    pageTable->bitmask = new int[pageTable->numLevels]; //initialize bitmask array
+    pageTable->bitmask = new uint32_t[pageTable->numLevels]; //initialize bitmask array
     pageTable->LevelPtr = new Level[pageTable->numLevels]; //initialize level array
 };
 
@@ -86,8 +86,8 @@ int main(int argc, char **argv)
     while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed != pageTable->numberofAddresses)
     {
         pageInsert(pageTable, pageTable->trace->addr, pageTable->frame);
-        std::cout << "Page Insert: " << std::hex << pageTable->trace->addr << " -> " << std::hex << pageTable->frame << std::endl;
-        std::cout << "=================================" << std::endl;
+       // std::cout << "Page Insert: " << std::hex << pageTable->trace->addr << " -> " << std::hex << pageTable->frame << std::endl;
+       // std::cout << "=================================" << std::endl;
     }
 
 
