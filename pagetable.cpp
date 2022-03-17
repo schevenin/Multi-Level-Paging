@@ -2,14 +2,19 @@
 
 void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
 {
-   /* get next address and process */
+   
+   std::cout << "Address: " << std::hex << address << std::endl;
+
+   createBitmaskPageNumber(pageTable);
+
+   for (int i = 0; i < pageTable->numLevels; i++) {
+      /* get next address and process */
       if (NextAddress(pageTable->tracefile, pageTable->trace))
       {
-         createBitmaskPageNumber(pageTable);
-         pageTable->virtualPageNumber = pageTable->bitmask[0] & pageTable->trace->addr;
+         pageTable->virtualPageNumber = pageTable->bitmask[i] & pageTable->trace->addr;
          pageTable->virtualPageNumber = pageTable->virtualPageNumber >> pageTable->offsetSize;
-         
-         
+         std::cout << "Masked Result (" << i << "): " << (pageTable->virtualPageNumber) << std::endl;
+
          // frame++;
          
          //std::cout<<page->temp.frame<<std::endl;
@@ -23,18 +28,26 @@ void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
          //std::cout<<pagetable->offset<<std::endl;
          //pagetable->LevelPtr->map.push_back(temp);
          
-        pageTable->instructionsProcessed++; // ensures correct amount of addreesses are processed
+         pageTable->instructionsProcessed++; // ensures correct amount of addreesses are processed
       }
+   }
+   
 }
 
 void createBitmaskPageNumber(PageTable *pageTable)
 {
-   for (size_t i = 0; i < pageTable->numLevels; i++)
+   pageTable->bitsProcessed = 0;
+   std::cout << "Creating VPN mask:" << std::endl;
+   for (int i = 0; i < pageTable->numLevels; i++)
    {
-      pageTable->bitmask[i] = ((1 << pageTable->numbits[i]) - 1) << pageTable->offsetSize;
+      pageTable->bitsProcessed += pageTable->numBits[i];
+      pageTable->bitmask[i] = ((1 << pageTable->numBits[i]) - 1);
+      pageTable->bitmask[i] = pageTable->bitmask[i] << (32-pageTable->bitsProcessed);
 
-      // std::cout<<pagetable->numbits[i]<<std::endl;
+      std::cout << "Bits (Level: " << i << "): " << std::dec << pageTable->numBits[i] << std::endl;
+      std::cout << "Bitmask (Level: " << i << "): " << std::hex << pageTable->bitmask[i] << std::endl;
    }
+   std::cout << std::endl;
 }
 
 void createBitmaskOffset(PageTable *pageTable)

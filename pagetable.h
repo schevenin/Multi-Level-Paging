@@ -19,7 +19,7 @@ struct PageTable
   int numLevels;            /* number of levels*/
   int *bitmask;             // creates an array of bitmasks
   int *bitshift;            // creates an array of bitshifts for each level
-  std::vector<int> numbits; // creates an vetor that holds the number of bits for each level
+  std::vector<int> numBits; // creates an vetor that holds the number of bits for each level
   int numberofAddresses;
 
 
@@ -28,6 +28,7 @@ struct PageTable
   int virtualPageNumber;
   int totalPageBits;
   int offset;
+  int bitsProcessed;
   int offsetSize;            // gets offset of addresses
   int pageSize;          // gets pagesize
   FILE *tracefile;
