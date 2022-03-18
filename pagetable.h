@@ -42,8 +42,8 @@ struct PageTable
   uint32_t frame;
 };
 
-Map *pageLookup(PageTable *pageTable, unsigned int virtualAddress);
-void pageInsert(PageTable *pageTable, unsigned int virtualAddress, uint32_t frame);
+Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress);
+void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame);
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
 

@@ -1,12 +1,12 @@
 #include "pagetable.h"
 
-void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
-{
-   pageInsert(pageTable->rootLevelPtr, address, frame);
+Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress) {
+   return NULL;
 }
 
-Map *pageLookup() {
-   return NULL;
+void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
+{
+   pageInsert(pageTable->rootLevelPtr, virtualAddress, frame);
 }
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift)
