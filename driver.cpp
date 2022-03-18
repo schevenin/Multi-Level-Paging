@@ -65,14 +65,14 @@ int main(int argc, char **argv)
     pageTable->numLevels = argc - optind;                    // get number of levels in page table
     pageTable->bitsPerLevel = new int[pageTable->numLevels]; // create array to store bit count per level
     pageTable->bitShift = new int[pageTable->numLevels];     // create array to store bit shift per level
-    pageTable->EntryCount = new int[pageTable->numLevels];
+    pageTable->entriesPerLevel = new int[pageTable->numLevels];
 
     // loop through each page level
     for (int i = optind; i < argc; i++)
     {
         // counting bits at each level
         pageTable->bitsPerLevel[i - optind] = atoi(argv[i]);                             // store bits count for level i
-        pageTable->EntryCount[i - optind] = pow(2, pageTable->bitsPerLevel[i - optind]); // store entries for level i
+        pageTable->entriesPerLevel[i - optind] = pow(2, pageTable->bitsPerLevel[i - optind]); // store entries for level i
 
         // finding bitshift for each level
         pageTable->totalPageBits += atoi(argv[i]);                                  // total page bits at level i
@@ -84,6 +84,7 @@ int main(int argc, char **argv)
     pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
     pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
+    pageTable->pageLookup = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
 
     // find page lookup masks at each level
     for (int i = 0; i < pageTable->numLevels; i++)
@@ -94,36 +95,47 @@ int main(int argc, char **argv)
     // FUNCTIONALITY: lookup, insert, update
 
     pageTable->rootLevelPtr = new Level[pageTable->numLevels]; // root level pointer
-    pageTable->trace = new p2AddrTr();
     pageTable->instructionsProcessed = 0;
+
     // remain within address to process limits
     while (!feof(tracefile) && pageTable->instructionsProcessed != addressProcessingLimit)
     {
+
+        // next address
+        p2AddrTr *address_trace = new p2AddrTr();
+
         // if another address exists
-        if (NextAddress(tracefile, pageTable->trace))
+        if (NextAddress(tracefile, address_trace))
         {
+
             // find address VPN
-            pageTable->virtualPageNumber = virtualAddressToPageNum(pageTable->trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
-            // TODO: find address offset
-            pageTable->offset = virtualAddressToPageNum(pageTable->trace->addr, pageTable->offsetMask, 0);
+            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
+            // find address offset
+            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);
+
+
 
             // print details
             std::cout << "=================================" << std::endl;
-            fprintf(stdout, "Virtual Address:        %08X\n", pageTable->trace->addr);
-            fprintf(stdout, "VPN Mask:               %08X\n", pageTable->vpnMask);
-            fprintf(stdout, "VPN:                    %08X\n", pageTable->virtualPageNumber);
-            fprintf(stdout, "Offset mask:            %08X\n", pageTable->offsetMask);
-            fprintf(stdout, "Offset:                 %08X\n", pageTable->offset);
-            
+            fprintf(stdout, "Virtual Address:       %08X\n", address_trace->addr);
+            fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
+            fprintf(stdout, "VPN:                   %08X\n", pageTable->vpn);
+            fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
+            fprintf(stdout, "Offset:                %08X\n", pageTable->offset);
+            fprintf(stdout, "\nVirtual Page Lookups:\n");            
+
+
             // page lookups per level
-            fprintf(stdout, "\nVirtual Page Lookups:\n");
             for (int i = 0; i < pageTable->numLevels; i++)
             {
-                pageTable->virtualPageLookup = virtualAddressToPageNum(pageTable->trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
+                pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
+                
+                // print details
                 fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
-                fprintf(stdout, "Page Lookup Num   (%i): %08X\n", i, pageTable->virtualPageLookup);
-                fprintf(stdout, "Page Lookup Index (%i): %i\n", i, (pageTable->virtualPageLookup>>pageTable->bitShift[i]));
+                fprintf(stdout, "Page Lookup Num   (%i): %08X\n", i, pageTable->pageLookup[i]);
+                fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]>>pageTable->bitShift[i]), pageTable->entriesPerLevel[i]);
             }
+            
             pageTable->instructionsProcessed++;
         }
 
@@ -135,3 +147,5 @@ int main(int argc, char **argv)
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
+
+
