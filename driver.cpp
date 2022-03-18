@@ -5,16 +5,21 @@
 #include <fstream>
 #include <unistd.h>
 
-/* NEED TO INITIALIZE ALL VARIABLES IN PAGETABLE WITH GIVEN VALUES/DEFAULTS*/
+int main(int argc, char **argv)
+{
+    // initialize OutputOptionsType
+    OutputOptionsType *output = new OutputOptionsType();
 
-void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
-    
+    // handle and process arguments
+    PageTable *pageTable = new PageTable();
+
     // default settings
     pageTable->offsetSize = DEFAULTOFFSET;
-    pageTable->numberOfAddresses = NONUMBEROFARGUMENTS;
+    int numberOfAddresses = NONUMBEROFARGUMENTS;
+    
     // for output
     char *outputType = DEFAULTOUTPUTTYPE;
-    
+
     // check optional arguments
     int opt;
     while ((opt = getopt(argc, argv, "n:c:o:")) != -1)
@@ -23,7 +28,7 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
         {
         case 'n':
             // sets number of addresses needed to go through
-            pageTable->numberOfAddresses = atoi(optarg);
+            numberOfAddresses = atoi(optarg);
             break;
         case 'c':
             // gets cache capacity of adresses
@@ -46,17 +51,20 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     }
     pageTable->tracefileName = argv[optind++]; // gets tracefile name
 
-    
+    pageTable->numLevels = argc - optind;
+    pageTable->numBits = new int[pageTable->numLevels];
+    pageTable->bitshift = new int[pageTable->numLevels];
     // check mandatory arguments
+    int count = 0;
     for (int i = optind; i < argc; i++)
-    { 
-        pageTable->numLevels++;                      // sets number of levels
-        pageTable->numBits.push_back(atoi(argv[i])); // grabs amount of bits for each level
-        pageTable->totalPageBits += atoi(argv[i]); 
-        pageTable->offsetSize -= (atoi(argv[i]));        // gets offset by subtracting each page size
-        pageTable->bitshift.push_back(DEFAULTSIZE - pageTable->totalPageBits);
+    {
+        pageTable->numBits[count] = atoi(argv[i]); // grabs amount of bits for each level
+         //std::cout <<pageTable->numBits[i]<< std::endl;
+        pageTable->totalPageBits += atoi(argv[i]);
+        pageTable->offsetSize -= (atoi(argv[i])); // gets offset by subtracting each page size
+        pageTable->bitshift[count] = (DEFAULTSIZE - pageTable->totalPageBits);
+        count++;
     }
-    pageTable->bitshift.push_back(0); //adds bitshift for offset which is 0
     // verify working tracefile
     pageTable->tracefile = fopen(pageTable->tracefileName, "rb");
     if (pageTable->tracefile == NULL)
@@ -66,43 +74,35 @@ void ProcessArguments(int argc, char **argv, PageTable *pageTable) {
     }
 
     // finally, assign pagetable variables
-    pageTable->pageSize = pow(2, pageTable->offsetSize);    // get size = 2^offset
-    pageTable->bitmask = new uint32_t[pageTable->numLevels]; //initialize bitmask array
-    pageTable->LevelPtr = new Level[pageTable->numLevels]; //initialize level array
-    
+    pageTable->pageSize = pow(2, pageTable->offsetSize);     // get size = 2^offset
+    pageTable->bitmask = new uint32_t[pageTable->numLevels]; // initialize bitmask array
+    pageTable->rootLevelPtr = new Level[pageTable->numLevels];   // initialize level array
+
     // offset mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;
 
-    // VPN mask
+    //PageLookUp mask
     for (int i = 0; i < pageTable->numLevels; i++)
-   {
-      pageTable->bitmask[i] = (1 << pageTable->numBits[i]) - 1;
-      pageTable->bitmask[i] = pageTable->bitmask[i] << (pageTable->bitshift[i]);
-   }
-};
+    {
+        pageTable->bitmask[i] = (1 << pageTable->numBits[i]) - 1;
+        pageTable->bitmask[i] = pageTable->bitmask[i] << (pageTable->bitshift[i]);
+        
+        std::cout <<pageTable->numBits[i]<< std::endl;
+       // std::cout <<pageTable->bitmask[i]<< std::endl;
+    }
 
-int main(int argc, char **argv)
-{    
+    //VPN mask
+    pageTable->vpnMask = (1 << pageTable->totalPageBits) - 1;
+    
+    pageTable->vpnMask = pageTable->vpnMask << pageTable->offset;
 
-    // initialize OutputOptionsType
-    OutputOptionsType *output = new OutputOptionsType();
-
-    // handle and process arguments
-    PageTable *pageTable = new PageTable();
-    ProcessArguments(argc, argv, pageTable);
     pageTable->trace = new p2AddrTr();
 
     // insert into pages
-    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= pageTable->numberOfAddresses)
+    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= numberOfAddresses)
     {
-        pageInsert(pageTable, pageTable->trace->addr, pageTable->frame);
+        pageInsert(pageTable, &pageTable->trace->addr, pageTable->frame);
     }
-
-
-
-
-
-    //report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
+    // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
-

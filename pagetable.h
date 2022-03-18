@@ -16,22 +16,27 @@
 
 struct PageTable
 {
-  struct Level *LevelPtr;   // pointer to level struct
-  int numLevels;            /* number of levels*/
+  struct Level *rootLevelPtr;   // pointer to level struct
   uint32_t *bitmask;             // creates an array of bitmasks
-  std::vector<int> bitshift;            // creates an array of bitshifts for each level
-  std::vector<uint32_t> numBits; // creates an vetor that holds the number of bits for each level
-  int numberOfAddresses;
+  int *bitshift;            // creates an array of bitshifts for each level
+  int *EntryCount; //Size of each level
+  int numLevels;            /* number of levels*/
+  
+  int *numBits; // creates an array that holds the number of bits for each level
+  int offsetSize;          // gets offset of addresses
+  int pageSize;          // gets pagesize
 
+  uint32_t offsetMask;
+  uint32_t pageMask;
+  uint32_t vpnMask; 
 
-  Map temp; //creates temp map to update map array in level.h
-  uint32_t frame;
-  int virtualPageNumber;
+  int virtualPageLookup; //I think should be in level ( Each level will have 1)
+  int virtualPageNumber; //total of virtual page lookup
+  
   int totalPageBits;
   uint32_t offset;
-  uint32_t offsetMask;
-  int offsetSize;            // gets offset of addresses
-  int pageSize;          // gets pagesize
+  
+  uint32_t frame;
   FILE *tracefile;
   char *tracefileName;
   unsigned long instructionsProcessed = 0; // instructions
@@ -39,7 +44,7 @@ struct PageTable
 };
 
 Map pageLookup(PageTable *pageTable, unsigned int vritualAddress);
-void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame);
+void pageInsert(PageTable *pageTable, uint32_t *address, uint32_t frame);
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
 
