@@ -6,14 +6,13 @@
 #include "pagetable.h"
 #include "map.h"
 
-struct Level{
+struct Level {
 int depth;
 struct PageTable *pageTable;
 bool isLeaf;
-Level *nextLevel; //Array of Level* pointers to the next level. (non-leaf or interior level)
-Map** map; //array of MAP objects, each mapping a logical/virtual page to a physical frame. (leaf level)
+Level **nextLevel; // array of level pointers (non-leaf level)
+Map *mappings; // mappings for each virtual page number to a physical frame. (leaf level)
 };
 
-//void pageInsert(PageTable page, uint32_t address, uint32_t frame); //inserts the page into the level
-
+void pageInsert(Level *level, uint32_t virtualAddress, uint32_t frame); //inserts the page into the level
 #endif

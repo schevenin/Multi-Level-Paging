@@ -43,7 +43,7 @@ struct PageTable
 };
 
 Map *pageLookup(PageTable *pageTable, unsigned int virtualAddress);
-void pageInsert(PageTable *pageTable, unsigned int *virtualAddress, uint32_t frame);
+void pageInsert(PageTable *pageTable, unsigned int virtualAddress, uint32_t frame);
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
 

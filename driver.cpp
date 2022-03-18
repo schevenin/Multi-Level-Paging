@@ -104,8 +104,8 @@ int main(int argc, char **argv)
         {
             // find address VPN
             pageTable->virtualPageNumber = virtualAddressToPageNum(pageTable->trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
-            // find address offset
-            pageTable->offset = virtualAddressToPageNum(pageTable->trace->addr, pageTable->offsetMask, pageTable->offsetSize) << pageTable->offsetSize;
+            // TODO: find address offset
+            pageTable->offset = virtualAddressToPageNum(pageTable->trace->addr, pageTable->offsetMask, 0);
 
             // print details
             std::cout << "=================================" << std::endl;
@@ -115,6 +115,8 @@ int main(int argc, char **argv)
             fprintf(stdout, "VPN: %08X\n", pageTable->virtualPageNumber);
             fprintf(stdout, "Offset: %08X\n", pageTable->offset);
 
+            fprintf(stdout, "\nVirtual Page Lookups:\n");
+
             // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
@@ -122,6 +124,7 @@ int main(int argc, char **argv)
                 fprintf(stdout, "\nLevel: %i\n", i);
                 fprintf(stdout, "Virtual page lookup mask (%i): %08X\n", i, pageTable->pageLookupMask[i]);
                 fprintf(stdout, "Virtual page lookup (%i): %08X\n", i, pageTable->virtualPageLookup);
+                fprintf(stdout, "Virtual page lookup index (%i): %i\n", i, (pageTable->virtualPageLookup>>pageTable->bitShift[i]));
             }
 
             pageTable->instructionsProcessed++;

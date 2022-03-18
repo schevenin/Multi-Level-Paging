@@ -1,8 +1,8 @@
 #include "pagetable.h"
 
-void pageInsert(PageTable *pageTable, uint32_t *address, uint32_t frame)
+void pageInsert(PageTable *pageTable, uint32_t address, uint32_t frame)
 {
-   
+   pageInsert(pageTable->rootLevelPtr, address, frame);
 }
 
 Map *pageLookup() {

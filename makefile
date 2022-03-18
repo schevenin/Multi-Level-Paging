@@ -15,12 +15,14 @@ CXXFLAGS=-std=c++11 -g
 # First target is the one executed if you just type make
 # make target specifies a specific target
 # $^ is an example of a special variable.  It substitutes all dependencies
-a.out : driver.o tracereader.o output_mode_helpers.o pagetable.o
+a.out : driver.o tracereader.o output_mode_helpers.o pagetable.o level.o
 	$(CXX) $(CXXFLAGS) -o a.out $^
 output_mode_helpers.o : output_mode_helpers.cpp
 tracereader.o : tracereader.h tracereader.cpp 
 pagetable.o: tracereader.h pagetable.h pagetable.cpp
+level.o : level.h level.cpp
 driver.o : tracereader.h driver.cpp
+
 
 clean :
 	rm -rf *.o
