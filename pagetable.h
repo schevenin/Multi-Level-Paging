@@ -19,28 +19,27 @@ struct PageTable
 {
   struct Level *rootLevelPtr; // pointer to level struct
 
+  int numLevels;   /* number of levels*/
   int *EntryCount; // Size of each level
-
-  int offsetSize;    // gets offset of addresses
-  int pageSize;      // gets pagesize
-  int numLevels;     /* number of levels*/
-  int *bitsPerLevel; // creates an array that holds the number of bits for each level
-  int *bitShift;     // creates an array of bitshifts for each level
-
-  // masks
-  uint32_t offsetMask;
-  uint32_t vpnMask;
-  uint32_t *pageLookupMask;
-
-  int virtualPageLookup; // I think should be in level ( Each level will have 1)
-  int virtualPageNumber; // total of virtual page lookup
-
+  int offsetSize;  // gets offset of addresses
+  int pageSize;    // gets pagesize
   int totalPageBits;
-  uint32_t offset;
+  int *bitsPerLevel;         // creates an array that holds the number of bits for each level
+  int *bitShift;             // creates an array of bitshifts for each level
+  int instructionsProcessed; // keeps track of instructions processed
 
-  uint32_t frame;
-  unsigned long instructionsProcessed = 0; // instructions
+  // masks and addresses
+  uint32_t offsetMask;      // offset mask
+  uint32_t vpnMask;         // vpn mask
+  uint32_t *pageLookupMask; // page lookup masks
+
+  uint32_t virtualPageNumber; // vpn
+  uint32_t offset;            // offset
+  uint32_t virtualPageLookup; // page lookup
+
+  // helper
   p2AddrTr *trace;
+  uint32_t frame;
 };
 
 Map *pageLookup(PageTable *pageTable, unsigned int virtualAddress);

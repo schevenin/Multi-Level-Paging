@@ -65,6 +65,7 @@ int main(int argc, char **argv)
     pageTable->numLevels = argc - optind;                    // get number of levels in page table
     pageTable->bitsPerLevel = new int[pageTable->numLevels]; // create array to store bit count per level
     pageTable->bitShift = new int[pageTable->numLevels];     // create array to store bit shift per level
+    pageTable->EntryCount = new int[pageTable->numLevels];
 
     // loop through each page level
     for (int i = optind; i < argc; i++)
@@ -94,14 +95,13 @@ int main(int argc, char **argv)
 
     pageTable->rootLevelPtr = new Level[pageTable->numLevels]; // root level pointer
     pageTable->trace = new p2AddrTr();
-
+    pageTable->instructionsProcessed = 0;
     // remain within address to process limits
-    while (!feof(tracefile) && pageTable->instructionsProcessed <= addressProcessingLimit)
+    while (!feof(tracefile) && pageTable->instructionsProcessed != addressProcessingLimit)
     {
         // if another address exists
         if (NextAddress(tracefile, pageTable->trace))
         {
-
             // find address VPN
             pageTable->virtualPageNumber = virtualAddressToPageNum(pageTable->trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
             // find address offset
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
             fprintf(stdout, "VPN: %08X\n", pageTable->virtualPageNumber);
             fprintf(stdout, "Offset: %08X\n", pageTable->offset);
 
-            // each level
+            // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
                 pageTable->virtualPageLookup = virtualAddressToPageNum(pageTable->trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
