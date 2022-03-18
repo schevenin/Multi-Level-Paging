@@ -7,18 +7,21 @@
 
 int main(int argc, char **argv)
 {
-    // initialize OutputOptionsType
-    OutputOptionsType *output = new OutputOptionsType();
+    PageTable *pageTable;      // instantiate page table
+    OutputOptionsType *output; // instantiate output object
 
-    // handle and process arguments
-    PageTable *pageTable = new PageTable();
+    int pageSize;               // instantiate page size
+    int addressProcessingLimit; // instantiate address limit
+    int cacheCapacity;          // instantiate size of TLB
+    char *outputType;           // instantiate type of output
+    FILE *tracefile;            // instantiate tracefile
 
-    // default settings
-    pageTable->offsetSize = DEFAULTOFFSET;
-    int numberOfAddresses = NONUMBEROFARGUMENTS;
-    
-    // for output
-    char *outputType = DEFAULTOUTPUTTYPE;
+    pageTable = new PageTable();               // initialize page table
+    output = new OutputOptionsType();          // initialize output object
+    pageTable->offsetSize = DEFAULTOFFSET;     // initialize offset size
+    addressProcessingLimit = DEFAULTADDRLIMIT; // initialize address limit
+    cacheCapactiy = 0;                         // initialize size of TLB
+    outputType = DEFAULTOUTPUTTYPE;            // initialize output type
 
     // check optional arguments
     int opt;
@@ -28,7 +31,7 @@ int main(int argc, char **argv)
         {
         case 'n':
             // sets number of addresses needed to go through
-            numberOfAddresses = atoi(optarg);
+            addressProcessingLimit = atoi(optarg);
             break;
         case 'c':
             // gets cache capacity of adresses
@@ -43,66 +46,92 @@ int main(int argc, char **argv)
         }
     }
 
-    // require 2 arguments
+    // require at least 2 arguments
     if (argc - optind < 2)
     {
         fprintf(stderr, "%s: too few arguments\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    pageTable->tracefileName = argv[optind++]; // gets tracefile name
 
-    pageTable->numLevels = argc - optind;
-    pageTable->numBits = new int[pageTable->numLevels];
-    pageTable->bitshift = new int[pageTable->numLevels];
-    // check mandatory arguments
-    int count = 0;
-    for (int i = optind; i < argc; i++)
-    {
-        pageTable->numBits[count] = atoi(argv[i]); // grabs amount of bits for each level
-         //std::cout <<pageTable->numBits[i]<< std::endl;
-        pageTable->totalPageBits += atoi(argv[i]);
-        pageTable->offsetSize -= (atoi(argv[i])); // gets offset by subtracting each page size
-        pageTable->bitshift[count] = (DEFAULTSIZE - pageTable->totalPageBits);
-        count++;
-    }
     // verify working tracefile
-    pageTable->tracefile = fopen(pageTable->tracefileName, "rb");
-    if (pageTable->tracefile == NULL)
+    tracefile = fopen(argv[optind++], "rb");
+    if (tracefile == NULL)
     {
-        fprintf(stderr, "cannot open %s for reading\n", pageTable->tracefileName);
+        fprintf(stderr, "cannot open %s for reading: \n", argv[optind++]);
         exit(1);
     }
 
-    // finally, assign pagetable variables
-    pageTable->pageSize = pow(2, pageTable->offsetSize);     // get size = 2^offset
-    pageTable->bitmask = new uint32_t[pageTable->numLevels]; // initialize bitmask array
-    pageTable->rootLevelPtr = new Level[pageTable->numLevels];   // initialize level array
+    pageSize = pow(2, pageTable->offsetSize);                // set page size
+    pageTable->numLevels = argc - optind;                    // get number of levels in page table
+    pageTable->bitsPerLevel = new int[pageTable->numLevels]; // create array to store bit count per level
+    pageTable->bitShift = new int[pageTable->numLevels];     // create array to store bit shift per level
 
-    // offset mask
-    pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;
+    // loop through each page level
+    for (int i = optind; i < argc; i++)
+    {
+        // counting bits at each level
+        pageTable->bitsPerLevel[i - optind] = atoi(argv[i]);                             // store bits count for level i
+        pageTable->EntryCount[i - optind] = pow(2, pageTable->bitsPerLevel[i - optind]); // store entries for level i
 
-    //PageLookUp mask
+        // finding bitshift for each level
+        pageTable->totalPageBits += atoi(argv[i]);                                  // total page bits at level i
+        pageTable->offsetSize -= (atoi(argv[i]));                                   // offset at level i
+        pageTable->bitShift[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
+    }
+
+    // create vpn, offset, masks
+    pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
+    pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
+    pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
+
+    // find page lookup masks at each level
     for (int i = 0; i < pageTable->numLevels; i++)
     {
-        pageTable->bitmask[i] = (1 << pageTable->numBits[i]) - 1;
-        pageTable->bitmask[i] = pageTable->bitmask[i] << (pageTable->bitshift[i]);
-        
-        //std::cout <<pageTable->numBits[i]<< std::endl;
-       // std::cout <<pageTable->bitmask[i]<< std::endl;
+        pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShift[i]);
     }
 
-    //VPN mask
-    pageTable->vpnMask = (1 << pageTable->totalPageBits) - 1;
+    // FUNCTIONALITY: lookup, insert, update
 
-    pageTable->vpnMask = pageTable->vpnMask << pageTable->offsetSize;
-    //std::cout << std::hex<<pageTable->vpnMask<< std::endl;
+    pageTable->rootLevelPtr = new Level[pageTable->numLevels]; // root level pointer
     pageTable->trace = new p2AddrTr();
 
-    // insert into pages
-    while (!feof(pageTable->tracefile) && pageTable->instructionsProcessed <= numberOfAddresses)
+    // remain within address to process limits
+    while (!feof(tracefile) && pageTable->instructionsProcessed <= addressProcessingLimit)
     {
-        pageInsert(pageTable, &pageTable->trace->addr, pageTable->frame);
+        // if another address exists
+        if (NextAddress(tracefile, pageTable->trace))
+        {
+
+            // find address VPN
+            pageTable->virtualPageNumber = virtualAddressToPageNum(pageTable->trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
+            // find address offset
+            pageTable->offset = virtualAddressToPageNum(pageTable->trace->addr, pageTable->offsetMask, pageTable->offsetSize) << pageTable->offsetSize;
+
+            // print details
+            std::cout << "=================================" << std::endl;
+            fprintf(stdout, "Virtual Address: %08X\n", pageTable->trace->addr);
+            fprintf(stdout, "VPN Mask: %X\n", pageTable->vpnMask);
+            fprintf(stdout, "Offset mask: %08X\n", pageTable->offsetMask);
+            fprintf(stdout, "VPN: %08X\n", pageTable->virtualPageNumber);
+            fprintf(stdout, "Offset: %08X\n", pageTable->offset);
+
+            // each level
+            for (int i = 0; i < pageTable->numLevels; i++)
+            {
+                pageTable->virtualPageLookup = virtualAddressToPageNum(pageTable->trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
+                fprintf(stdout, "\nLevel: %i\n", i);
+                fprintf(stdout, "Virtual page lookup mask (%i): %08X\n", i, pageTable->pageLookupMask[i]);
+                fprintf(stdout, "Virtual page lookup (%i): %08X\n", i, pageTable->virtualPageLookup);
+            }
+
+            pageTable->instructionsProcessed++;
+        }
+
+        // look for page in TLB
+        // pageLookup(pageTable, &pageTable->trace->addr, pageTable->frame);
+        // pageInsert(pageTable, &pageTable->trace->addr, pageTable->frame);
     }
+
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };
