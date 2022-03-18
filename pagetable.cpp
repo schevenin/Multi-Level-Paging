@@ -12,12 +12,12 @@ void pageInsert(PageTable *pageTable, uint32_t* address, uint32_t frame)
          //pageTable->virtualPageNumber = virtualAddressToPageNum(*address, pageTable->bitmask[i], pageTable->bitshift[i]);
          //pageTable->offset = virtualAddressToPageNum(address, pageTable->bitmask[i], (pageTable->bitshift[i]));
          //fprintf(stdout, "\nLevel: %i\n", i);
-         fprintf(stdout, "Virtual Address: %08X\n", address);
+         fprintf(stdout, "Virtual Address: %08X\n", pageTable->trace->addr);
 
         fprintf(stdout, "\nOffset mask: %08X\n", pageTable->offsetMask);
          fprintf(stdout, "VP Lookup Mask (%i): %08X\n", i, pageTable->bitmask[i]);
          fprintf(stdout, "\nVPN Mask (%i): %X\n", i, pageTable->vpnMask);
-         fprintf(stdout, "\nVP Lookup (%i): %X\n", i, pageTable->virtualPageLookup);
+         fprintf(stdout, "\nVP Lookup (%i): %08X\n", i, pageTable->virtualPageLookup);
          fprintf(stdout, "\nVPN (%i): %X\n", i, pageTable->virtualPageNumber);
         fprintf(stdout, "Offset (%i): %X\n", i, pageTable->offset);
          std::cout << std::endl;

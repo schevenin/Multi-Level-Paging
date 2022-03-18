@@ -87,15 +87,15 @@ int main(int argc, char **argv)
         pageTable->bitmask[i] = (1 << pageTable->numBits[i]) - 1;
         pageTable->bitmask[i] = pageTable->bitmask[i] << (pageTable->bitshift[i]);
         
-        std::cout <<pageTable->numBits[i]<< std::endl;
+        //std::cout <<pageTable->numBits[i]<< std::endl;
        // std::cout <<pageTable->bitmask[i]<< std::endl;
     }
 
     //VPN mask
     pageTable->vpnMask = (1 << pageTable->totalPageBits) - 1;
-    
-    pageTable->vpnMask = pageTable->vpnMask << pageTable->offset;
 
+    pageTable->vpnMask = pageTable->vpnMask << pageTable->offsetSize;
+    //std::cout << std::hex<<pageTable->vpnMask<< std::endl;
     pageTable->trace = new p2AddrTr();
 
     // insert into pages
