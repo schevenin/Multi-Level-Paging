@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     // FUNCTIONALITY: lookup, insert, update
 
     pageTable->addressCount = 0;
-
+    int frame = 0;
     // remain within address to process limits
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
@@ -143,7 +143,8 @@ int main(int argc, char **argv)
             // check size of tlb
 
             // pageLookup(pageTable, &pageTable->trace->addr, pageTable->frame);
-            pageInsert(pageTable, pageTable->vpn, (uint32_t)777);
+            pageInsert(pageTable, pageTable->vpn, frame);
+            frame++;
         }
     }
 

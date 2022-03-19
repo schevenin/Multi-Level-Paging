@@ -13,7 +13,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame){
 
         level->mappings[index].frame = frame;
 
-        std::cout << "created mapping (level " << currentLevel << "): " << level->mappings[index].vpn << " -> " << level->mappings[index].vpn << std::endl;
+        std::cout << "created mapping (level " << currentLevel << "): " << level->mappings[index].vpn << " -> " << frame << std::endl;
     } else {
         // create new level and set depth to current depth + 1
         Level *newLevel = new Level();

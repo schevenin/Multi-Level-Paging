@@ -50,6 +50,4 @@ int NextAddress(FILE *trace_file, p2AddrTr *addr_ptr);
 #define STOPCLKACK 0x36 // acknowledge stop clock
 #define SMIACK 0x37     // acknowledge SMI mode
 
-void AddressDecoder(p2AddrTr *addr_ptr, FILE *out);
-
 #endif
