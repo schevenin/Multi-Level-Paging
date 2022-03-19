@@ -98,11 +98,6 @@ int main(int argc, char **argv)
 
     // FUNCTIONALITY: lookup, insert, update
 
-    pageTable->rootLevelPtr = new Level();
-    pageTable->rootLevelPtr->pageTable = pageTable;
-    pageTable->rootLevelPtr->depth = 0;
-
-
     pageTable->addressCount = 0;
 
     // remain within address to process limits
@@ -134,7 +129,8 @@ int main(int argc, char **argv)
             // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
-                pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
+                //pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
+                pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
 
                 // print details
                 fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
@@ -145,7 +141,7 @@ int main(int argc, char **argv)
             // look for page in TLB
 
             // check size of tlb
-            
+
             // pageLookup(pageTable, &pageTable->trace->addr, pageTable->frame);
             pageInsert(pageTable, pageTable->vpn, (uint32_t)777);
         }
