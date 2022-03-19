@@ -120,8 +120,8 @@ int main(int argc, char **argv)
             // print details
             std::cout << "=================================" << std::endl;
             fprintf(stdout, "Virtual Address:       %08X\n", address_trace->addr);
-            fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
-            fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
+            //fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
+            //fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
             fprintf(stdout, "VPN:                   %X\n", pageTable->vpn);
             fprintf(stdout, "Offset:                %X\n", pageTable->offset);
             fprintf(stdout, "\nVirtual Page Lookups:\n");
@@ -135,14 +135,10 @@ int main(int argc, char **argv)
                 // print details
                 //fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
                 fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
-                fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i] >> pageTable->bitShift[i]), pageTable->entriesPerLevel[i]);
+                fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
-            // look for page in TLB
-
-            // check size of tlb
-
-            // pageLookup(pageTable, &pageTable->trace->addr, pageTable->frame);
+            // map frames to vpn
             pageInsert(pageTable, pageTable->vpn, frame);
             frame++;
         }
