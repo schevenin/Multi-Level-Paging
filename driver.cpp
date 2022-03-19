@@ -157,7 +157,7 @@ int main(int argc, char **argv)
                     if (TLB.size() == cacheCapacity) {
                         // search LRU for oldest
                         uint32_t oldest;
-
+                        oldest = LRU.begin()->first;
                         // find oldest VPN in LRU
 
                         // erase VPN from TLB
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
                         LRU.erase(oldest);
                         
                         // 
-                        TLB.insert({found->vpn, found->frame});
+                       // TLB.insert();
                         LRU.insert({found->vpn, pageTable->addressCount});
 
                     } else {
