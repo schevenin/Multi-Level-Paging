@@ -20,7 +20,12 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame){
         newLevel->depth = level->depth+1;
 
         // Create an array of Level * entries based upon the number of entries in the new level and initialize to null/invalid as appropriate
-        Level **nextLevel = new Level*[level->pageTable->entriesPerLevel[newLevel->depth]];
+        int size = level->pageTable->entriesPerLevel[newLevel->depth];
+        Level **nextLevel = new Level*[size];
+
+        for (int i = 0; i < size; i++) {
+            nextLevel[i] = NULL;
+        }
 
         // assign array of level pointers to the new level
         newLevel->nextLevel = nextLevel;
