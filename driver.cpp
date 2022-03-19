@@ -21,7 +21,9 @@ int main(int argc, char **argv)
     int cacheCapacity;          // instantiate size of TLB
     char *outputType;           // instantiate type of output
     FILE *tracefile;            // instantiate tracefile
-    uint32_t physicalAddress;
+    uint32_t physicalAddress;   // instantiate physical address
+    bool tlbhit;                // instantiate TLB is hit
+    bool pthit;                 // instantiate page table is hit
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
@@ -102,7 +104,7 @@ int main(int argc, char **argv)
     pageTable->addressCount = 0;
     uint32_t newFrame = 0;
 
-    // remain within address to process limits
+    // process each address within address to processing limits
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
         // next address
@@ -127,6 +129,8 @@ int main(int argc, char **argv)
             if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
             {
                 // TLB hit
+                tlbhit = true;
+                pthit = false;
 
                 // PFN from TLB
                 PFN = TLB[pageTable->vpn];
@@ -147,6 +151,8 @@ int main(int argc, char **argv)
                 if (found != NULL)
                 {
                     // TLB miss, PageTable hit
+                    tlbhit = false;
+                    pthit = true;
 
                     // check if cache is full
                     if (TLB.size() == cacheCapacity)
@@ -180,6 +186,8 @@ int main(int argc, char **argv)
                 else
                 {
                     // TLB miss, PageTable miss
+                    tlbhit = false;
+                    pthit = false;
 
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, pageTable->vpn, newFrame);
@@ -223,7 +231,7 @@ int main(int argc, char **argv)
             }
             if (strcmp(outputType, "vpn2pfn") == 0)
             {
-                report_pagemap(pageTable->numLevels, pageTable->pageLookup, newFrame - 1);
+                report_pagemap(pageTable->numLevels, pageTable->pageLookup, PFN);
             }
             if (strcmp(outputType, "offset") == 0)
             {
@@ -231,7 +239,7 @@ int main(int argc, char **argv)
             }
             if (strcmp(outputType, "v2p_tlb_pt") == 0)
             {
-                // report_v2pUsingTLB_PTwalk(address_trace->addr, physicalAddress, bool tlbhit, bool pthit);
+                report_v2pUsingTLB_PTwalk(address_trace->addr, physicalAddress, tlbhit, pthit);
             }
         }
     }
@@ -239,7 +247,7 @@ int main(int argc, char **argv)
     // output that doesn't need to loop
     if (strcmp(outputType, "summary") == 0)
     {
-        report_summary(pageSize, 0, 0, 0, 0, 0);
+        report_summary(pageSize, 0, 0, 0, newFrame+1, 0);
     }
 
     if (strcmp(outputType, "bitmasks") == 0)
