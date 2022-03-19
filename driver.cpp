@@ -12,12 +12,12 @@ int main(int argc, char **argv)
     PageTable *pageTable;      // instantiate page table
     OutputOptionsType *output; // instantiate output object
 
-    std::map<uint32_t, int> TLB; // cache table of <VPN, PFN>
-    std::map<uint32_t, int> LRU; // least recent accessed table of <VPN, Access Time>
+    std::map<uint32_t, uint32_t> TLB; // cache table of <VPN, PFN>
+    std::map<uint32_t, uint32_t> LRU; // least recent accessed table of <VPN, Access Time>
 
     int pageSize;               // instantiate page size
     int addressProcessingLimit; // instantiate address limit
-    int cacheCapacity;      // instantiate size of TLB
+    int cacheCapacity;          // instantiate size of TLB
     char *outputType;           // instantiate type of output
     FILE *tracefile;            // instantiate tracefile
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     output = new OutputOptionsType();          // initialize output object
     pageTable->offsetSize = DEFAULTOFFSET;     // initialize offset size
     addressProcessingLimit = DEFAULTADDRLIMIT; // initialize address limit
-    cacheCapacity = DEFAULTCACHESIZE;                         // initialize size of TLB
+    cacheCapacity = DEFAULTCACHESIZE;          // initialize size of TLB
     outputType = DEFAULTOUTPUTTYPE;            // initialize output type
 
     // check optional arguments
@@ -97,85 +97,66 @@ int main(int argc, char **argv)
         pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShift[i]);
     }
 
-    // FUNCTIONALITY: lookup, insert, update
-
     pageTable->addressCount = 0;
-    int frame = 0;
+    uint32_t newFrame = 0;
+
     // remain within address to process limits
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
-
         // next address
         p2AddrTr *address_trace = new p2AddrTr();
 
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
-            pageTable->addressCount++;
-
-            // find address VPN
-            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize);
-            // find address offset
-            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);
-
-            // print details
-            // std::cout << "=================================" << std::endl;
-            // fprintf(stdout, "Virtual Address:       %08X\n", address_trace->addr);
-            // fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
-            // fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
-            // fprintf(stdout, "VPN:                   %X\n", pageTable->vpn);
-            // fprintf(stdout, "Offset:                %X\n", pageTable->offset);
-            // fprintf(stdout, "\nVirtual Page Lookups:\n");
+            pageTable->addressCount++; // keeping track of 
+            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
+            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0); // find address offset
 
             // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
-
-                // print details
-                // fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
-                // fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
-                // fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
+            // search TLB for VPN
+            uint32_t PFN;
 
-
-
-
-            // search TLB for existing VPN entry
-            int PFN;
             if (TLB.find(pageTable->vpn) != TLB.end())
             {
                 // TLB hit
+                std::cout << "tlb hit" << std::endl;
 
-                // get PFN
+                // PFN from TLB
                 PFN = TLB[pageTable->vpn];
 
                 // update LRU with most recent addressCount
                 LRU[pageTable->vpn] = pageTable->addressCount;
-
-                std::cout << "tlb hit" << std::endl;
             }
             else
             {
                 // TLB miss, walk PageTable
+                
+                // search PageTable for VPN
                 Map *found = pageLookup(pageTable, pageTable->vpn);
+
+                // found VPN in PageTable
                 if (found != NULL)
                 {
                     // TLB miss, PageTable hit
                     std::cout << "tlb miss, pagetable hit" << std::endl;
 
-                    // cache is full, replace oldest entry
+                    // check if cache is full
                     if (TLB.size() == cacheCapacity)
                     {
                         // find oldest VPN in LRU
                         uint32_t oldestKey;
-                        int oldestValue;
-
+                        uint32_t oldestValue;
                         oldestValue = pageTable->addressCount;
-    
-                        for (std::map<uint32_t, int>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter) {
-                            if (oldestValue > iter->second) {
+                        for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                        {
+                            if (oldestValue > iter->second)
+                            {
                                 oldestKey = iter->first;
                                 oldestValue = iter->second;
                             }
@@ -185,30 +166,32 @@ int main(int argc, char **argv)
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
-                    
+
                     // insert into TLB and LRU
                     TLB[found->vpn] = found->frame;
                     LRU[found->vpn] = pageTable->addressCount;
+
+                    PFN = found->frame;
                 }
                 else
                 {
                     // TLB miss, PageTable miss
                     std::cout << "tlb miss, pagetable miss" << std::endl;
 
-                    // insert vpn and frame into page table
-                    pageInsert(pageTable, pageTable->vpn, frame);
+                    // insert vpn and new frame into page table
+                    pageInsert(pageTable, pageTable->vpn, newFrame);
 
-                    // update TLB and LRU
+                    // check if cache is full
                     if (TLB.size() == cacheCapacity)
                     {
                         // find oldest VPN in LRU
                         uint32_t oldestKey;
-                        int oldestValue;
-
+                        uint32_t oldestValue;
                         oldestValue = pageTable->addressCount;
-    
-                        for (std::map<uint32_t, int>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter) {
-                            if (oldestValue > iter->second) {
+                        for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                        {
+                            if (oldestValue > iter->second)
+                            {
                                 oldestKey = iter->first;
                                 oldestValue = iter->second;
                             }
@@ -218,22 +201,18 @@ int main(int argc, char **argv)
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
-                    
+
                     // insert into TLB and LRU
-                    TLB[pageTable->vpn] = frame;
-                    LRU[pageTable->vpn] = pageTable->addressCount;          
-                    frame++;
+                    TLB[pageTable->vpn] = newFrame;
+                    LRU[pageTable->vpn] = pageTable->addressCount;
+
+                    PFN = newFrame;
+
+                    newFrame++;
                 }
             }
 
-
-
-
-
-
-
-
-
+            std::cout << "PFN: " << std::hex << PFN << std::endl;
         }
     }
 
