@@ -166,10 +166,15 @@ int main(int argc, char **argv)
                             }
                         }
 
+                        std::cout << "Cache full, removing oldest: " << std::hex << oldestKey << std::endl;
+
                         // erase oldest from TLB and LRU
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
+
+
+                    std::cout << "Cache insert: " << std::hex << found->vpn << std::endl;
 
                     // insert into TLB and LRU
                     TLB[found->vpn] = found->frame;
@@ -187,6 +192,8 @@ int main(int argc, char **argv)
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, pageTable->vpn, newFrame);
 
+                    std::cout << "PageTable insert: " << std::hex << pageTable->vpn << std::endl;
+
                     // check if cache is full
                     if (TLB.size() == cacheCapacity)
                     {
@@ -203,10 +210,14 @@ int main(int argc, char **argv)
                             }
                         }
 
+                        std::cout << "Cache full, removing oldest: " << std::hex << oldestKey << std::endl;
+
                         // erase oldest from TLB and LRU
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
+
+                    std::cout << "Cache insert: " << std::hex << pageTable->vpn << std::endl;
 
                     // insert into TLB and LRU
                     TLB[pageTable->vpn] = newFrame;
