@@ -1,5 +1,6 @@
 #include "pagetable.h"
 #include "cache.h"
+#include "output_mode_helpers.h"
 
 #include <unordered_map>
 #include <map>
@@ -15,11 +16,12 @@ int main(int argc, char **argv)
     std::map<uint32_t, uint32_t> TLB; // cache table of <VPN, PFN>
     std::map<uint32_t, uint32_t> LRU; // least recent accessed table of <VPN, Access Time>
 
-    int pageSize;               // instantiate page size
+    uint32_t pageSize;               // instantiate page size
     int addressProcessingLimit; // instantiate address limit
     int cacheCapacity;          // instantiate size of TLB
     char *outputType;           // instantiate type of output
     FILE *tracefile;            // instantiate tracefile
+    uint32_t physicalAddress;
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
@@ -66,7 +68,6 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    pageSize = pow(2, pageTable->offsetSize);                // set page size
     pageTable->numLevels = argc - optind;                    // get number of levels in page table
     pageTable->bitsPerLevel = new int[pageTable->numLevels]; // create array to store bit count per level
     pageTable->bitShift = new int[pageTable->numLevels];     // create array to store bit shift per level
@@ -86,6 +87,7 @@ int main(int argc, char **argv)
     }
 
     // create vpn, offset, masks
+    pageSize = pow(2, pageTable->offsetSize);                // set page size
     pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
     pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
@@ -214,7 +216,9 @@ int main(int argc, char **argv)
                     newFrame++;
                 }
             }
-
+            physicalAddress = (PFN * pageSize) + pageTable->offset;
+            
+            report_virtual2physical(address_trace->addr,physicalAddress);
             // print the PFN that is mappend to PFN
             std::cout << "VPN: " << std::hex << pageTable->vpn << std::endl;
             std::cout << "PFN: " << std::hex << PFN << std::endl;
