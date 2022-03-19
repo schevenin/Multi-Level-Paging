@@ -2,12 +2,13 @@
 
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 {
-   uint32_t vpnKey = pageTable->vpn; // looking for in PageTable
+   uint32_t vpnKey = pageTable->vpn;              // looking for in PageTable
    Level *currentLevel = pageTable->rootLevelPtr; // start search at root
 
    // for each level
    for (int x = 0; x < pageTable->numLevels; x++)
    {
+      // index of next level/map entry
       uint32_t index = pageTable->pageLookup[x]; // get index for each level
 
       // if the level isn't empty
@@ -43,24 +44,36 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
 {
-   // create root level
-   Level *newLevel = new Level();
-   pageTable->rootLevelPtr = newLevel;
-
-   newLevel->pageTable = pageTable;
-   newLevel->depth = 0;
-
-   int size = pageTable->entriesPerLevel[newLevel->depth];
-   Level **nextLevel = new Level *[size];
-
-   for (int i = 0; i < size; i++)
+   // if a root level already exists
+   if (pageTable->rootLevelPtr != NULL)
    {
-      nextLevel[i] = NULL;
+      pageInsert(pageTable->rootLevelPtr, virtualAddress, frame);
    }
+   // root level doesn't exist
+   else
+   {
+      // create root level
+      Level *newLevel = new Level();
+      newLevel->pageTable = pageTable;
+      newLevel->depth = 0;
 
-   newLevel->nextLevel = nextLevel;
+      // array of level* entries based upon the number of entries in the new level
+      int size = pageTable->entriesPerLevel[newLevel->depth];
+      Level **nextLevel = new Level *[size];
 
-   pageInsert(newLevel, virtualAddress, frame);
+      // initialize next level to NULL
+      for (int i = 0; i < size; i++)
+      {
+         nextLevel[i] = NULL;
+      }
+
+      // assign NULL entries to new level
+      newLevel->nextLevel = nextLevel;
+      pageTable->rootLevelPtr = newLevel;
+
+      // insert new level
+      pageInsert(newLevel, virtualAddress, frame);
+   }
 }
 
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift)

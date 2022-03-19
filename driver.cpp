@@ -124,7 +124,7 @@ int main(int argc, char **argv)
             uint32_t PFN; // PFN that is mapped to VPN
 
             // found in TLB
-            if (TLB.find(pageTable->vpn) != TLB.end())
+            if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
             {
                 // TLB hit
                 std::cout << "tlb hit" << std::endl;
@@ -216,14 +216,19 @@ int main(int argc, char **argv)
                     newFrame++;
                 }
             }
+
             physicalAddress = (PFN * pageSize) + pageTable->offset;
             
             report_virtual2physical(address_trace->addr,physicalAddress);
             // print the PFN that is mappend to PFN
-            std::cout << "VPN: " << std::hex << pageTable->vpn << std::endl;
-            std::cout << "PFN: " << std::hex << PFN << std::endl;
+            // std::cout << "VPN: " << std::hex << pageTable->vpn << std::endl;
+            // std::cout << "PFN: " << std::hex << PFN << std::endl;
+            std::cout << std::endl;
+            
         }
     }
+
+    std::cout << "Frames: " << std::dec << newFrame+1 << std::endl;
 
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;

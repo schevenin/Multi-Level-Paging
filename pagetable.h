@@ -13,7 +13,7 @@
 #define DEFAULTADDRLIMIT -1
 #define DEFAULTOFFSET 32
 #define DEFAULTSIZE 32
-#define DEFAULTCACHESIZE 0
+#define DEFAULTCACHESIZE -1
 
 struct PageTable
 {

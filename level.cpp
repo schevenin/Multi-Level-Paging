@@ -9,33 +9,51 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
     if (currentLevel == (level->pageTable->numLevels) - 1)
     {
         level->isLeaf = true;
-        level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels - 1]];
+
+        // if mappings in level is NULL
+        if (level->mappings == NULL)
+        {
+            level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels - 1]];
+        }
+
+        // add mapping
         level->mappings[index].vpn = address;
         level->mappings[index].frame = frame;
     }
+    // is not leaf node
     else
     {
-        // create new level and set depth to current depth + 1
-        Level *newLevel = new Level();
-        newLevel->pageTable = level->pageTable;
-        newLevel->depth = level->depth + 1;
-
-        // Create an array of Level* entries based upon the number of entries in the new level and initialize to null/invalid as appropriate
-        int size = level->pageTable->entriesPerLevel[newLevel->depth];
-        Level **nextLevel = new Level *[size];
-
-        for (int i = 0; i < size; i++)
+        // if next level is null
+        if (level->nextLevel[index] == NULL)
         {
-            nextLevel[i] = NULL;
+
+            // create new level and set depth to current depth + 1
+            Level *newLevel = new Level();
+            newLevel->pageTable = level->pageTable;
+            newLevel->depth = level->depth + 1;
+
+            // array of level* entries based upon the number of entries in the new level
+            int size = level->pageTable->entriesPerLevel[newLevel->depth];
+            Level **nextLevel = new Level *[size];
+
+            // initialize next level to NULL
+            for (int i = 0; i < size; i++)
+            {
+                nextLevel[i] = NULL;
+            }
+
+            // assign array of level pointers to the new level
+            newLevel->nextLevel = nextLevel;
+
+            // assign current level with pointer to the next
+            level->nextLevel[index] = newLevel;
+
+            // insert new level
+            pageInsert(newLevel, address, frame);
         }
-
-        // assign array of level pointers to the new level
-        newLevel->nextLevel = nextLevel;
-
-        // assign current level with pointer to the next
-        level->nextLevel[index] = newLevel;
-
-        // pageInsert(pointer to new Level, address, frame);
-        pageInsert(newLevel, address, frame);
+        else
+        {
+            pageInsert(level->nextLevel[index], address, frame);
+        }
     }
 }
