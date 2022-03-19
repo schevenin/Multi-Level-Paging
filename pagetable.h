@@ -19,15 +19,15 @@ struct PageTable
 {
   struct Level *rootLevelPtr; // pointer to level struct
 
-  int numLevels;            // level count
-  int offsetSize;           // gets offset of addresses
-  int pageSize;             // gets pagesize
-  int totalPageBits;        // sum of all pages bit sizes
-  int addressCount;         // keeps track of instructions processed
-  int *bitsPerLevel;        // the number of bits per level
-  int *bitShift;            // bitshifts per level
-  int *entriesPerLevel;     // amount of entries per level
-  
+  int numLevels;        // level count
+  int offsetSize;       // gets offset of addresses
+  int pageSize;         // gets pagesize
+  int totalPageBits;    // sum of all pages bit sizes
+  int addressCount;     // keeps track of instructions processed
+  int *bitsPerLevel;    // the number of bits per level
+  int *bitShift;        // bitshifts per level
+  int *entriesPerLevel; // amount of entries per level
+
   uint32_t vpnMask;         // vpn mask
   uint32_t vpn;             // vpn
   uint32_t offsetMask;      // offset mask

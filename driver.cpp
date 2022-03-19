@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     std::map<uint32_t, uint32_t> TLB; // cache table of <VPN, PFN>
     std::map<uint32_t, uint32_t> LRU; // least recent accessed table of <VPN, Access Time>
 
-    uint32_t pageSize;               // instantiate page size
+    uint32_t pageSize;          // instantiate page size
     int addressProcessingLimit; // instantiate address limit
     int cacheCapacity;          // instantiate size of TLB
     char *outputType;           // instantiate type of output
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     }
 
     // create vpn, offset, masks
-    pageSize = pow(2, pageTable->offsetSize);                // set page size
+    pageSize = pow(2, pageTable->offsetSize);                                            // set page size
     pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
     pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
@@ -111,9 +111,9 @@ int main(int argc, char **argv)
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
-            pageTable->addressCount++; // keeping track of 
+            pageTable->addressCount++;                                                                                // keeping track of
             pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
-            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0); // find address offset
+            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
 
             // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
@@ -127,7 +127,6 @@ int main(int argc, char **argv)
             if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
             {
                 // TLB hit
-                std::cout << "tlb hit" << std::endl;
 
                 // PFN from TLB
                 PFN = TLB[pageTable->vpn];
@@ -140,7 +139,7 @@ int main(int argc, char **argv)
             else
             {
                 // TLB miss, walk PageTable
-                
+
                 // search PageTable for VPN
                 Map *found = pageLookup(pageTable, pageTable->vpn);
 
@@ -148,7 +147,6 @@ int main(int argc, char **argv)
                 if (found != NULL)
                 {
                     // TLB miss, PageTable hit
-                    std::cout << "tlb miss, pagetable hit" << std::endl;
 
                     // check if cache is full
                     if (TLB.size() == cacheCapacity)
@@ -166,15 +164,10 @@ int main(int argc, char **argv)
                             }
                         }
 
-                        std::cout << "Cache full, removing oldest: " << std::hex << oldestKey << std::endl;
-
                         // erase oldest from TLB and LRU
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
-
-
-                    std::cout << "Cache insert: " << std::hex << found->vpn << std::endl;
 
                     // insert into TLB and LRU
                     TLB[found->vpn] = found->frame;
@@ -187,12 +180,9 @@ int main(int argc, char **argv)
                 else
                 {
                     // TLB miss, PageTable miss
-                    std::cout << "tlb miss, pagetable miss" << std::endl;
 
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, pageTable->vpn, newFrame);
-
-                    std::cout << "PageTable insert: " << std::hex << pageTable->vpn << std::endl;
 
                     // check if cache is full
                     if (TLB.size() == cacheCapacity)
@@ -210,14 +200,10 @@ int main(int argc, char **argv)
                             }
                         }
 
-                        std::cout << "Cache full, removing oldest: " << std::hex << oldestKey << std::endl;
-
                         // erase oldest from TLB and LRU
                         TLB.erase(oldestKey);
                         LRU.erase(oldestKey);
                     }
-
-                    std::cout << "Cache insert: " << std::hex << pageTable->vpn << std::endl;
 
                     // insert into TLB and LRU
                     TLB[pageTable->vpn] = newFrame;
@@ -229,17 +215,39 @@ int main(int argc, char **argv)
             }
 
             physicalAddress = (PFN * pageSize) + pageTable->offset;
-            
-            report_virtual2physical(address_trace->addr,physicalAddress);
-            // print the PFN that is mappend to PFN
-            // std::cout << "VPN: " << std::hex << pageTable->vpn << std::endl;
-            // std::cout << "PFN: " << std::hex << PFN << std::endl;
-            std::cout << std::endl;
-            
+
+            // output that needs to loop
+            if (strcmp(outputType, "virtual2physical") == 0)
+            {
+                report_virtual2physical(address_trace->addr, physicalAddress);
+            }
+            if (strcmp(outputType, "vpn2pfn") == 0)
+            {
+                report_pagemap(pageTable->numLevels, pageTable->pageLookup, newFrame - 1);
+            }
+            if (strcmp(outputType, "offset") == 0)
+            {
+                fprintf(stdout, "%08X\n", pageTable->offset);
+            }
+            if (strcmp(outputType, "v2p_tlb_pt") == 0)
+            {
+                // report_v2pUsingTLB_PTwalk(address_trace->addr, physicalAddress, bool tlbhit, bool pthit);
+            }
         }
     }
 
-    std::cout << "Frames: " << std::dec << newFrame+1 << std::endl;
+    // output that doesn't need to loop
+    if (strcmp(outputType, "summary") == 0)
+    {
+        report_summary(pageSize, 0, 0, 0, 0, 0);
+    }
+
+    if (strcmp(outputType, "bitmasks") == 0)
+    {
+        report_bitmasks(pageTable->numLevels, pageTable->pageLookupMask);
+    }
+
+    std::cout << "Frames: " << std::dec << newFrame + 1 << std::endl;
 
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
