@@ -5,7 +5,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame){
     uint32_t index = level->pageTable->pageLookup[currentLevel];
 
     // if leaf node
-    if (currentLevel == level->pageTable->numLevels-1) {
+    if (currentLevel == (level->pageTable->numLevels)-1) {
 
         level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels]];
 
