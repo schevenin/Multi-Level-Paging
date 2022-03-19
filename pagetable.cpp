@@ -8,7 +8,6 @@ Map* pageLookup(PageTable *pageTable, uint32_t virtualAddress) {
 
    // searching for vpn
    uint32_t vpnKey = pageTable->vpn;
-   std::cout << "Searching for " << vpnKey << std::endl;
 
    Level *currentLevel = root;
 

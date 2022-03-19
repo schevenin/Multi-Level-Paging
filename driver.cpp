@@ -137,21 +137,17 @@ int main(int argc, char **argv)
                 fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
-            std::cout << "Looking for VPN in PageTable" << std::endl;
+            // std::cout << "Looking for VPN in PageTable" << std::endl;
             if (pageLookup(pageTable, pageTable->vpn) == NULL) {
-                std::cout << std::hex << pageTable->vpn << " not found in PageTable" << std::endl;
-
-                std::cout << "Inserting into PageTable" << std::endl;
+                // std::cout << std::hex << pageTable->vpn << " not found in PageTable" << std::endl;
                 pageInsert(pageTable, pageTable->vpn, frame);
+                frame++;
                 std::cout << std::endl;
             } else {
-                std::cout << std::hex << pageTable->vpn << " found in PageTable" << std::endl;
-                std::cout << std::endl;
+                // std::cout << std::hex << pageTable->vpn << " found in PageTable" << std::endl;
+                // std::cout << std::endl;
             }
-            
-            
 
-            frame++;
         }
     }
 
