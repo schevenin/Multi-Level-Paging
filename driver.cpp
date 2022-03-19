@@ -129,20 +129,27 @@ int main(int argc, char **argv)
             // page lookups per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
-                //pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]) << pageTable->bitShift[i];
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
 
                 // print details
-                //fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
+                fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
                 fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
                 fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
-            // map frames to vpn
-            pageInsert(pageTable, pageTable->vpn, frame);
-            Map *pair = pageLookup(pageTable, pageTable->vpn);
+            std::cout << "Looking for VPN in PageTable" << std::endl;
+            if (pageLookup(pageTable, pageTable->vpn) == NULL) {
+                std::cout << std::hex << pageTable->vpn << " not found in PageTable" << std::endl;
 
-            std::cout << "Found Pair: " << pair->vpn << pair->frame << std::endl; 
+                std::cout << "Inserting into PageTable" << std::endl;
+                pageInsert(pageTable, pageTable->vpn, frame);
+                std::cout << std::endl;
+            } else {
+                std::cout << std::hex << pageTable->vpn << " found in PageTable" << std::endl;
+                std::cout << std::endl;
+            }
+            
+            
 
             frame++;
         }
