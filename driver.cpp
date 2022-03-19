@@ -119,9 +119,9 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
             }
 
-            // search TLB for VPN
-            uint32_t PFN;
+            uint32_t PFN; // PFN that is mapped to VPN
 
+            // found in TLB
             if (TLB.find(pageTable->vpn) != TLB.end())
             {
                 // TLB hit
@@ -133,6 +133,8 @@ int main(int argc, char **argv)
                 // update LRU with most recent addressCount
                 LRU[pageTable->vpn] = pageTable->addressCount;
             }
+
+            // not found in TLB
             else
             {
                 // TLB miss, walk PageTable
@@ -173,6 +175,8 @@ int main(int argc, char **argv)
 
                     PFN = found->frame;
                 }
+
+                // inserting VPN into PageTable
                 else
                 {
                     // TLB miss, PageTable miss
@@ -207,11 +211,12 @@ int main(int argc, char **argv)
                     LRU[pageTable->vpn] = pageTable->addressCount;
 
                     PFN = newFrame;
-
                     newFrame++;
                 }
             }
 
+            // print the PFN that is mappend to PFN
+            std::cout << "VPN: " << std::hex << pageTable->vpn << std::endl;
             std::cout << "PFN: " << std::hex << PFN << std::endl;
         }
     }
