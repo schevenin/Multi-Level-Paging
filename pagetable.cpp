@@ -1,6 +1,10 @@
 #include "pagetable.h"
 
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress) {
+
+   
+
+
    return NULL;
 }
 
