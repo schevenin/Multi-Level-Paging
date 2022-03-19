@@ -2,6 +2,7 @@
 #include "cache.h"
 
 #include <unordered_map>
+#include <map>
 #include <math.h>
 #include <fstream>
 #include <unistd.h>
@@ -11,8 +12,8 @@ int main(int argc, char **argv)
     PageTable *pageTable;      // instantiate page table
     OutputOptionsType *output; // instantiate output object
 
-    std::unordered_map<uint32_t, int> TLB;              // cache table of <VPN, PFN>
-    std::unordered_map<uint32_t, int> recentlyAccessed; // recently accessed table of <VPN, Access Time>
+    std::map<uint32_t, int> TLB; // cache table of <VPN, PFN>
+    std::map<uint32_t, int> LRU; // least recent accessed table of <VPN, Access Time>
 
     int pageSize;               // instantiate page size
     int addressProcessingLimit; // instantiate address limit
@@ -137,17 +138,53 @@ int main(int argc, char **argv)
                 fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
-            // Search for VPN in PageTable
-            Map *found = pageLookup(pageTable, pageTable->vpn);
-            if (found != NULL) {
-                // PageTable hit
-                std::cout << "Mapping Already Exists: " << std::hex << found->vpn << std::endl;
+            // search TLB for existing VPN entry
+            int PFN;
+            if (TLB.find(pageTable->vpn) != TLB.end()) {
+                // TLB hit
+                PFN = TLB[pageTable->vpn];
+                // update LRU with most recent addressCount
+                LRU[pageTable->vpn] = pageTable->addressCount;
             } else {
-                // PageTable miss
-                pageInsert(pageTable, pageTable->vpn, frame);
-                std::cout << "Mapped: " << std::hex << pageTable->vpn << " -> " << std::dec << frame << std::endl;
-                frame++;
+                // TLB miss, walk PageTable
+                Map *found = pageLookup(pageTable, pageTable->vpn);
+                if (found != NULL) {
+                    // TLB miss, PageTable hit
+                    std::cout << "Mapping Already Exists: " << std::hex << found->vpn << std::endl;
+                    
+                    // add to cache and LRU
+                    // cache is full, replace oldest entry
+                    if (TLB.size() == cacheCapacity) {
+                        // search LRU for oldest
+                        uint32_t oldest;
+
+                        // find oldest VPN in LRU
+
+                        // erase VPN from TLB
+                        TLB.erase(oldest);
+
+                        // erase VPN from LRU
+                        LRU.erase(oldest);
+                        
+                        // 
+                        TLB.insert({found->vpn, found->frame});
+                        LRU.insert({found->vpn, pageTable->addressCount});
+
+                    } else {
+                        // cache isn't full, insert
+                    }
+                } else {
+                    // TLB miss, PageTable miss
+                    pageInsert(pageTable, pageTable->vpn, frame);
+                    // update cache and LRU
+                    std::cout << "Mapped: " << std::hex << pageTable->vpn << " -> " << std::dec << frame << std::endl;
+                    frame++;
+                }
             }
+
+
+
+            
 
         }
     }
