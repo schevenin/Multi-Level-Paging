@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
     int pageSize;               // instantiate page size
     int addressProcessingLimit; // instantiate address limit
-    int cacheCapacity;          // instantiate size of TLB
+    int cacheCapacity = 2;      // instantiate size of TLB
     char *outputType;           // instantiate type of output
     FILE *tracefile;            // instantiate tracefile
 
@@ -121,8 +121,8 @@ int main(int argc, char **argv)
             // print details
             std::cout << "=================================" << std::endl;
             fprintf(stdout, "Virtual Address:       %08X\n", address_trace->addr);
-            //fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
-            //fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
+            fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
+            fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
             fprintf(stdout, "VPN:                   %X\n", pageTable->vpn);
             fprintf(stdout, "Offset:                %X\n", pageTable->offset);
             fprintf(stdout, "\nVirtual Page Lookups:\n");
@@ -133,59 +133,90 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
 
                 // print details
-                fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
-                fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
-                fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
+                // fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
+                //    fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
+                //  fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
             // search TLB for existing VPN entry
             int PFN;
-            if (TLB.find(pageTable->vpn) != TLB.end()) {
+            if (TLB.find(pageTable->vpn) != TLB.end())
+            {
                 // TLB hit
                 PFN = TLB[pageTable->vpn];
                 // update LRU with most recent addressCount
                 LRU[pageTable->vpn] = pageTable->addressCount;
-            } else {
+                std::cout << "+++TLB HIT: " << std::hex << pageTable->vpn << std::endl;
+            }
+            else
+            {
+                std::cout << "TLB Miss: " << std::hex << pageTable->vpn << std::endl;
                 // TLB miss, walk PageTable
                 Map *found = pageLookup(pageTable, pageTable->vpn);
-                if (found != NULL) {
+                if (found != NULL)
+                {
                     // TLB miss, PageTable hit
-                    std::cout << "Mapping Already Exists: " << std::hex << found->vpn << std::endl;
-                    
+                    // std::cout << "Mapping Already Exists: " << std::hex << found->vpn << std::endl;
+                    std::cout << "size: TLB " << TLB.size() << std::endl;
+                    std::cout << "size: LRU " << LRU.size() << std::endl;
                     // add to cache and LRU
                     // cache is full, replace oldest entry
-                    if (TLB.size() == cacheCapacity) {
-                        // search LRU for oldest
+                    if (TLB.size() == cacheCapacity)
+                    {
+                         // find oldest VPN in LRU
                         uint32_t oldest;
                         oldest = LRU.begin()->first;
-                        // find oldest VPN in LRU
-
+                        std::cout << "Oldest Address: " << oldest << std::endl;
+    
                         // erase VPN from TLB
                         TLB.erase(oldest);
 
                         // erase VPN from LRU
                         LRU.erase(oldest);
-                        
-                        // 
-                       // TLB.insert();
-                        LRU.insert({found->vpn, pageTable->addressCount});
 
-                    } else {
+                        // TLB.insert();
+                        TLB.insert({(found->vpn), PFN});
+                        LRU.insert({(found->vpn), (pageTable->addressCount)});
+                    }
+                    else
+                    {
+                        TLB.insert({(found->vpn), PFN});
+                        LRU.insert({(found->vpn), (pageTable->addressCount)});
                         // cache isn't full, insert
                     }
-                } else {
+                }
+                else
+                {
+
                     // TLB miss, PageTable miss
                     pageInsert(pageTable, pageTable->vpn, frame);
                     // update cache and LRU
-                    std::cout << "Mapped: " << std::hex << pageTable->vpn << " -> " << std::dec << frame << std::endl;
+                    if (TLB.size() == cacheCapacity)
+                    {
+                        //find oldest Address
+                        uint32_t oldest;
+                        oldest = LRU.begin()->first;
+                        std::cout << "Oldes: " << oldest << std::endl;
+                        TLB.erase(oldest);
+
+                        // erase VPN from LRU
+                        LRU.erase(oldest);
+
+                        // TLB.insert();
+                        TLB.insert({(pageTable->vpn), PFN});
+                        LRU.insert({(pageTable->vpn), (pageTable->addressCount)});
+                    }
+                    else
+                    {
+                          // cache isn't full, insert
+                        TLB.insert({(pageTable->vpn), PFN});
+                        LRU.insert({(pageTable->vpn), (pageTable->addressCount)});
+
+                    }
+                    // std::cout << "Mapped: " << std::hex << pageTable->vpn << " -> " << std::dec << frame << std::endl;
                     frame++;
                 }
             }
-
-
-
-            
-
         }
     }
 
