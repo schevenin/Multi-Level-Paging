@@ -8,9 +8,9 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "/Users/sawyerthompson/GitHub/Multi-Level-Paging/a.out",
-            "args": ["trace.tr", "4", "16"],
-            "cwd": "/Users/sawyerthompson/GitHub/Multi-Level-Paging"
+            "program": "/Users/rogelio/GitHub/Multi-Level-Paging/a.out",
+            "args": ["trace.tr", "4", "8", "12"],
+            "cwd": "/Users/rogelio/GitHub/Multi-Level-Paging"
         }
     ]
 }

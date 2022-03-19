@@ -6,14 +6,12 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame){
 
     // if leaf node
     if (currentLevel == (level->pageTable->numLevels)-1) {
-
-        level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels]];
-
+        
+        level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels-1]];
         level->mappings[index].vpn = address;
-
         level->mappings[index].frame = frame;
 
-        std::cout << "created mapping (level " << currentLevel << "): " << level->mappings[index].vpn << " -> " << frame << std::endl;
+        std::cout << "\nMapped (level " << currentLevel << "): " << std::hex << address << " -> " << std::dec << frame << std::endl;
     } else {
         // create new level and set depth to current depth + 1
         Level *newLevel = new Level();

@@ -113,7 +113,7 @@ int main(int argc, char **argv)
             pageTable->addressCount++;
 
             // find address VPN
-            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize) << pageTable->offsetSize;
+            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize);
             // find address offset
             pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);
 
@@ -121,9 +121,9 @@ int main(int argc, char **argv)
             std::cout << "=================================" << std::endl;
             fprintf(stdout, "Virtual Address:       %08X\n", address_trace->addr);
             fprintf(stdout, "VPN Mask:              %08X\n", pageTable->vpnMask);
-            fprintf(stdout, "VPN:                   %08X\n", pageTable->vpn);
             fprintf(stdout, "Offset mask:           %08X\n", pageTable->offsetMask);
-            fprintf(stdout, "Offset:                %08X\n", pageTable->offset);
+            fprintf(stdout, "VPN:                   %X\n", pageTable->vpn);
+            fprintf(stdout, "Offset:                %X\n", pageTable->offset);
             fprintf(stdout, "\nVirtual Page Lookups:\n");
 
             // page lookups per level
@@ -133,8 +133,8 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
 
                 // print details
-                fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
-                fprintf(stdout, "Page Lookup Num   (%i): %08X\n", i, pageTable->pageLookup[i]);
+                //fprintf(stdout, "Page Lookup Mask  (%i): %08X\n", i, pageTable->pageLookupMask[i]);
+                fprintf(stdout, "Page Lookup Num   (%i): %X\n", i, pageTable->pageLookup[i]);
                 fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i] >> pageTable->bitShift[i]), pageTable->entriesPerLevel[i]);
             }
 
