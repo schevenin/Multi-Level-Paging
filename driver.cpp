@@ -140,6 +140,10 @@ int main(int argc, char **argv)
 
             // map frames to vpn
             pageInsert(pageTable, pageTable->vpn, frame);
+            Map *pair = pageLookup(pageTable, pageTable->vpn);
+
+            std::cout << "Found Pair: " << pair->vpn << pair->frame << std::endl; 
+
             frame++;
         }
     }

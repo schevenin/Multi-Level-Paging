@@ -2,17 +2,28 @@
 
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress) {
 
+   Map *pair = new Map();
+
+   Level *root = pageTable->rootLevelPtr;
+
+   Level *nextLevel;
+   Level **nextLevelElements;
+
+   // check level elements
+   for (int i = 0; i < pageTable->numLevels; i++) {
+      
+   }
 
 
-
-   return NULL;
+   return pair;
 }
 
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
 {
-
    // create root level
    Level *newLevel = new Level();
+   pageTable->rootLevelPtr = newLevel;
+
    newLevel->pageTable = pageTable;
    newLevel->depth = 0;
 
