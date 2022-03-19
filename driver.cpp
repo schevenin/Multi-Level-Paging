@@ -137,15 +137,16 @@ int main(int argc, char **argv)
                 fprintf(stdout, "Page Lookup Index (%i): %i/%i\n", i, (pageTable->pageLookup[i]), pageTable->entriesPerLevel[i]);
             }
 
-            // std::cout << "Looking for VPN in PageTable" << std::endl;
-            if (pageLookup(pageTable, pageTable->vpn) == NULL) {
-                // std::cout << std::hex << pageTable->vpn << " not found in PageTable" << std::endl;
-                pageInsert(pageTable, pageTable->vpn, frame);
-                frame++;
-                std::cout << std::endl;
+            // Search for VPN in PageTable
+            Map *found = pageLookup(pageTable, pageTable->vpn);
+            if (found != NULL) {
+                // PageTable hit
+                std::cout << "Mapping Already Exists: " << std::hex << found->vpn << std::endl;
             } else {
-                // std::cout << std::hex << pageTable->vpn << " found in PageTable" << std::endl;
-                // std::cout << std::endl;
+                // PageTable miss
+                pageInsert(pageTable, pageTable->vpn, frame);
+                std::cout << "Mapped: " << std::hex << pageTable->vpn << " -> " << std::dec << frame << std::endl;
+                frame++;
             }
 
         }

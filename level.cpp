@@ -1,29 +1,31 @@
 #include "pagetable.h"
 
-void pageInsert(Level *level, uint32_t address, uint32_t frame){
+void pageInsert(Level *level, uint32_t address, uint32_t frame)
+{
     int currentLevel = level->depth;
     uint32_t index = level->pageTable->pageLookup[currentLevel];
 
     // if leaf node
-    if (currentLevel == (level->pageTable->numLevels)-1) {
-        
+    if (currentLevel == (level->pageTable->numLevels) - 1)
+    {
         level->isLeaf = true;
-        level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels-1]];
+        level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels - 1]];
         level->mappings[index].vpn = address;
         level->mappings[index].frame = frame;
-
-        std::cout << "Mapped: " << std::hex << address << " -> " << std::dec << frame << std::endl;
-    } else {
+    }
+    else
+    {
         // create new level and set depth to current depth + 1
         Level *newLevel = new Level();
         newLevel->pageTable = level->pageTable;
-        newLevel->depth = level->depth+1;
+        newLevel->depth = level->depth + 1;
 
         // Create an array of Level* entries based upon the number of entries in the new level and initialize to null/invalid as appropriate
         int size = level->pageTable->entriesPerLevel[newLevel->depth];
-        Level **nextLevel = new Level*[size];
+        Level **nextLevel = new Level *[size];
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++)
+        {
             nextLevel[i] = NULL;
         }
 
@@ -33,7 +35,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame){
         // assign current level with pointer to the next
         level->nextLevel[index] = newLevel;
 
-        //pageInsert(pointer to new Level, address, frame);
+        // pageInsert(pointer to new Level, address, frame);
         pageInsert(newLevel, address, frame);
     }
 }

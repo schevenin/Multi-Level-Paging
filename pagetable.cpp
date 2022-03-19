@@ -1,37 +1,38 @@
 #include "pagetable.h"
 
-Map* pageLookup(PageTable *pageTable, uint32_t virtualAddress) {
+Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
+{
+   uint32_t vpnKey = pageTable->vpn; // looking for in PageTable
+   Level *currentLevel = pageTable->rootLevelPtr; // start search at root
 
-   
+   // for each level
+   for (int x = 0; x < pageTable->numLevels; x++)
+   {
+      uint32_t index = pageTable->pageLookup[x]; // get index for each level
 
-   Level *root = pageTable->rootLevelPtr;
-
-   // searching for vpn
-   uint32_t vpnKey = pageTable->vpn;
-
-   Level *currentLevel = root;
-
-   // for each page lookup
-   for (int x = 0; x < pageTable->numLevels; x++) {
-      // get index
-      uint32_t index = pageTable->pageLookup[x];
-
-      if (currentLevel != NULL) {
+      // if the level isn't empty
+      if (currentLevel != NULL)
+      {
          // is leaf level
-         if (currentLevel->depth == pageTable->numLevels-1) {
-            // if leaf level mappings contains entries
-            if (currentLevel->mappings != NULL) {
+         if (currentLevel->depth == pageTable->numLevels - 1)
+         {
+            // if level contains mappings
+            if (currentLevel->mappings != NULL)
+            {
                // if the vpn is equal to the key
-               if (currentLevel->mappings[index].vpn == vpnKey) {
-                  // return pair
+               if (currentLevel->mappings[index].vpn == vpnKey)
+               {
+                  // return the pair
                   Map *pair = new Map();
                   pair->vpn = currentLevel->mappings[index].vpn;
                   pair->frame = currentLevel->mappings[index].frame;
                   return pair;
                }
             }
-         } else {
-            // not a leaf level
+         }
+         else
+         {
+            // not a leaf level, move down a level
             currentLevel = currentLevel->nextLevel[index];
          }
       }
@@ -50,9 +51,10 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
    newLevel->depth = 0;
 
    int size = pageTable->entriesPerLevel[newLevel->depth];
-   Level **nextLevel = new Level*[size];
+   Level **nextLevel = new Level *[size];
 
-   for (int i = 0; i < size; i++) {
+   for (int i = 0; i < size; i++)
+   {
       nextLevel[i] = NULL;
    }
 
