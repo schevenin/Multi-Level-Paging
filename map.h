@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
 #include "pagetable.h"
 
 struct Map {
