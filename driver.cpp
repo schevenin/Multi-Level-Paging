@@ -45,6 +45,12 @@ int main(int argc, char **argv)
         case 'c':
             // gets cache capacity of adresses
             cacheCapacity = atoi(optarg);
+
+            if (cacheCapacity < 0) {
+                fprintf("Cache capacity must be a number, greater than or equal to 0");
+                exit(EXIT_FAILURE);
+            }
+
             break;
         case 'o':
             // gets type of output
@@ -58,7 +64,7 @@ int main(int argc, char **argv)
     // require at least 2 arguments
     if (argc - optind < 2)
     {
-        fprintf(stderr, "%s: too few arguments\n", argv[0]);
+        fprintf(stderr, "Level 0 page table must be at least 1 bit");
         exit(EXIT_FAILURE);
     }
 
@@ -66,8 +72,8 @@ int main(int argc, char **argv)
     tracefile = fopen(argv[optind++], "rb");
     if (tracefile == NULL)
     {
-        fprintf(stderr, "cannot open %s for reading: \n", argv[optind++]);
-        exit(1);
+        fprintf(stderr, "Unable to open <<%s>>", argv[optind++]);
+        exit(EXIT_FAILURE);
     }
 
     pageTable->numLevels = argc - optind;                    // get number of levels in page table
@@ -78,12 +84,24 @@ int main(int argc, char **argv)
     // loop through each page level
     for (int i = optind; i < argc; i++)
     {
+
+        if (!atoi(argv[i]) > 0) {
+            fprintf(stderr, "Level %i page table must be at least 1 bit", i-optind);
+            exit(EXIT_FAILURE);
+        }
+
         // counting bits at each level
         pageTable->bitsPerLevel[i - optind] = atoi(argv[i]);                                  // store bits count for level i
         pageTable->entriesPerLevel[i - optind] = pow(2, pageTable->bitsPerLevel[i - optind]); // store entries for level i
 
         // finding bitshift for each level
         pageTable->totalPageBits += atoi(argv[i]);                                  // total page bits at level i
+        
+        if (!pageTable->totalPageBits <= 28) {
+            fprintf(stderr, "Too many bits used in page tables");
+            exit(EXIT_FAILURE);
+        }
+
         pageTable->offsetSize -= (atoi(argv[i]));                                   // offset at level i
         pageTable->bitShift[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
     }
@@ -217,9 +235,11 @@ int main(int argc, char **argv)
                     TLB[pageTable->vpn] = newFrame;
                     LRU[pageTable->vpn] = pageTable->addressCount;
 
+
+                    
                     PFN = newFrame;
-                    std::cout << "Frame assigned, there was a miss. " << PFN << std::endl;
                     newFrame++;
+                    std::cout << "Frame assigned, there was a miss. " << newFrame << std::endl;
                 }
             }
 

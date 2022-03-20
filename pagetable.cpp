@@ -57,6 +57,7 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
    {
       // create root level
       Level *newLevel = new Level();
+      pageTable->rootLevelPtr = newLevel;
       newLevel->pageTable = pageTable;
       newLevel->depth = 0;
 
@@ -72,7 +73,7 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
 
       // assign NULL entries to new level
       newLevel->nextLevel = nextLevel;
-      pageTable->rootLevelPtr = newLevel;
+      
 
       // insert new level
       pageInsert(newLevel, virtualAddress, frame);
@@ -84,4 +85,44 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
    uint32_t result;
    result = (virtualAddress & mask) >> shift;
    return result;
+}
+
+void countPageTableSize(PageTable *pageTable) {
+
+   Level *currentLevel = pageTable->rootLevelPtr; // start search at root
+
+   // for each level
+   for (int x = 0; x < pageTable->numLevels; x++)
+   {
+      // index of next level/map entry
+      uint32_t index = pageTable->pageLookup[x]; // get index for each level
+
+      // if the level isn't empty
+      if (currentLevel != NULL)
+      {
+
+         pageTable->totalBytes += sizeof(currentLevel);
+
+         // is leaf level
+         if (currentLevel->depth == pageTable->numLevels - 1)
+         {
+            // if level contains mappings
+            if (currentLevel->mappings != NULL)
+            {
+               
+               pageTable->totalBytes += sizeof(currentLevel->mappings);
+
+            }
+         }
+         else
+         {
+            // not a leaf level, move down a level
+
+            // for all
+
+            currentLevel = currentLevel->nextLevel[index];
+         }
+      }
+   }
+
 }
