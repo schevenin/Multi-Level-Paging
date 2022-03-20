@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     // require at least 2 arguments
     if (argc - optind < 2)
     {
-        fprintf(stderr, "Level 0 page table must be at least 1 bit");
+        std::cout << "Level 0 page table must be at least 1 bit" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     tracefile = fopen(argv[optind++], "rb");
     if (tracefile == NULL)
     {
-        fprintf(stderr, "Unable to open <<%s>>", argv[optind++]);
+        std::cout << "Unable to open <<" << argv[optind-1] << ">>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
         // verify valid page size
         if (atoi(argv[i]) <= 0)
         {
-            fprintf(stderr, "Level %i page table must be at least 1 bit", i - optind);
+            std::cout << "Level " << (i-optind) << " page table must be at least 1 bit" << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
         // verify valid bit sizes
         if ((pageTable->totalPageBits) > 28)
         {
-            fprintf(stderr, "Too many bits used in page tables");
+            std::cout << "Too many bits used in page tables" << std::endl;
             exit(EXIT_FAILURE);
         }
 
