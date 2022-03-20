@@ -1,6 +1,6 @@
 #include "pagetable.h"
-#include "cache.h"
 #include "output_mode_helpers.h"
+#include "string.h"
 
 #include <unordered_map>
 #include <map>
@@ -235,11 +235,8 @@ int main(int argc, char **argv)
                     TLB[pageTable->vpn] = newFrame;
                     LRU[pageTable->vpn] = pageTable->addressCount;
 
-
-                    
                     PFN = newFrame;
                     newFrame++;
-                    std::cout << "Frame assigned, there was a miss. " << newFrame << std::endl;
                 }
             }
 

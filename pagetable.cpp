@@ -90,6 +90,7 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
 void countPageTableSize(PageTable *pageTable) {
 
    Level *currentLevel = pageTable->rootLevelPtr; // start search at root
+   int totalBytes = 0;
 
    // for each level
    for (int x = 0; x < pageTable->numLevels; x++)
@@ -101,7 +102,7 @@ void countPageTableSize(PageTable *pageTable) {
       if (currentLevel != NULL)
       {
 
-         pageTable->totalBytes += sizeof(currentLevel);
+         totalBytes += sizeof(currentLevel);
 
          // is leaf level
          if (currentLevel->depth == pageTable->numLevels - 1)
@@ -110,7 +111,7 @@ void countPageTableSize(PageTable *pageTable) {
             if (currentLevel->mappings != NULL)
             {
                
-               pageTable->totalBytes += sizeof(currentLevel->mappings);
+               totalBytes += sizeof(currentLevel->mappings);
 
             }
          }
