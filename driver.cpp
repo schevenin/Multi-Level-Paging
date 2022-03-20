@@ -8,6 +8,13 @@
 #include <fstream>
 #include <unistd.h>
 
+/**
+ * @brief Main Execution of Multi Level Paging with TLB Cache
+ * 
+ * @param argc integer amount of arguments
+ * @param argv character array of arguments
+ * @return int value indicating exit status
+ */
 int main(int argc, char **argv)
 {
     PageTable *pageTable;                      // instantiate page table
@@ -30,7 +37,7 @@ int main(int argc, char **argv)
     bool pthit;                                // instantiate page table is hit
 
     const char *outputType;                    // instantiate type of output
-    
+
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
     pageTable->offsetSize = DEFAULTOFFSET;     // initialize offset size
@@ -290,7 +297,6 @@ int main(int argc, char **argv)
     {
         report_summary(pageSize, cacheHits, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable, pageTable->rootLevelPtr));
     }
-
     if (strcmp(outputType, "bitmasks") == 0)
     {
         report_bitmasks(pageTable->numLevels, pageTable->pageLookupMask);

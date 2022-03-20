@@ -1,5 +1,12 @@
 #include "pagetable.h"
 
+/**
+ * @brief Recursively performs a lookup of a VPN->PFN mapping in PageTable
+ * 
+ * @param pageTable PageTable object
+ * @param virtualAddress Virtual address to be searched for.
+ * @return Map* Mapping of found VPN->PFN
+ */
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 {
    uint32_t vpnKey = virtualAddressToPageNum(virtualAddress, pageTable->vpnMask, pageTable->offsetSize); // looking for in PageTable
@@ -39,6 +46,13 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
    return NULL;
 }
 
+/**
+ * @brief Recursively performs an insertion of a VPN->VPN mapping in PageTable
+ * 
+ * @param pageTable PageTable object
+ * @param virtualAddress Virtual address to insert
+ * @param newFrame New frame to assign the inserted virtual address
+ */
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame)
 {
    // if a root level already exists
@@ -70,6 +84,14 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame
    }
 }
 
+/**
+ * @brief Applies masking and shifting of a given address
+ * 
+ * @param virtualAddress Virtual address to mask and shift
+ * @param mask Mask (&) to apply to virtual address
+ * @param shift Amount of bits to shift virtual address
+ * @return uint32_t Masked and shifted result
+ */
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift)
 {
    uint32_t result;
@@ -77,6 +99,13 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
    return result;
 }
 
+/**
+ * @brief Recursively counts the size in bytes of a PageTable
+ * 
+ * @param pageTable PageTable object to count
+ * @param level Level to begin counting
+ * @return int Total count in bytes
+ */
 int countPageTableSize(PageTable *pageTable, Level *level)
 {
    int sum = 0;

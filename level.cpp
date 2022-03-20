@@ -1,5 +1,12 @@
 #include "pagetable.h"
 
+/**
+ * @brief Recursively performs an insertion of a VPN->VPN mapping in PageTable
+ * 
+ * @param pageTable Level to insert from
+ * @param virtualAddress Virtual address to insert
+ * @param newFrame New frame to assign the inserted virtual address
+ */
 void pageInsert(Level *level, uint32_t virtualAddress, uint32_t newFrame)
 {
     int currentDepth = level->depth;

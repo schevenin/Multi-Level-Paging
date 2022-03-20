@@ -37,11 +37,10 @@ struct PageTable
   uint32_t *pageLookup;     // page lookup
 };
 
-Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress);
-void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame);
-void pageInsert(PageTable *level, uint32_t virtualAddress, uint32_t newFrame);
-
-uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift);
-int countPageTableSize(PageTable *pageTable, Level *level);
+Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress);                           // recursively performs a lookup of a VPN->PFN mapping in PageTable
+void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame);        // recursively performs an insertion of a VPN->VPN mapping in PageTable
+void pageInsert(PageTable *level, uint32_t virtualAddress, uint32_t newFrame);            // recursively performs an insertion of a VPN->VPN mapping in PageTable
+uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift); // applies masking and shifting of a given address
+int countPageTableSize(PageTable *pageTable, Level *level);                               // recursively counts the size in bytes of a PageTable
 
 #endif
