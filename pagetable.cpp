@@ -112,26 +112,14 @@ int countPageTableSize(PageTable *pageTable, Level *level)
    sum += sizeof(level); // get size of current level
 
    int entryCount = pageTable->entriesPerLevel[level->depth]; // possible number of entries in current level
+   sum += entryCount * 8; // regardless of exterior or interior level, add entries in bytes
 
    // for every possible entry in level
    for (int i = 0; i < entryCount; i++)
    {
-      // if the level is a leaf node
-      if (level->isLeaf)
-      {
-         // add size of mappings
-         sum += sizeof(level->mappings[i]);
-      }
-      // if level isn't leaf node
-      else
-      {
-         // if another level at index exists
-         if (level->nextLevel[i] != NULL)
-         {
-
-            // get the size of the level and continue
-            sum += countPageTableSize(pageTable, level->nextLevel[i]);
-         }
+      // get the size of the next level
+      if (level->nextLevel[i] != NULL) {
+         sum += countPageTableSize(pageTable, level->nextLevel[i]);
       }
    }
 
