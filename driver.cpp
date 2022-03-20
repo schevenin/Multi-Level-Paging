@@ -166,12 +166,13 @@ int main(int argc, char **argv)
                 // search PageTable for VPN
                 Map *found = pageLookup(pageTable, pageTable->vpn);
 
-                // found VPN in PageTable
-                if (found->vpn == pageTable->vpn)
+                // found exists in PageTable
+                if (found != nullptr)
                 {
                     // TLB miss, PageTable hit
                     tlbhit = false;
                     pthit = true;
+                    pageTable->pageTableHits += 1;
 
                     // update associated PFN
                     PFN = found->frame;
@@ -218,7 +219,6 @@ int main(int argc, char **argv)
 
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, pageTable->vpn, newFrame);
-                    pageTable->pageTableHits += 1; // update number of times a page was mapped
 
                     // update associated PFN
                     PFN = newFrame;

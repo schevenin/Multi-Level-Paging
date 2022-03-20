@@ -23,11 +23,21 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
                // if vpn == key
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
-                  // return the pair
-                  Map *pair = new Map();
-                  pair->vpn = currentLevel->mappings[index].vpn;
-                  pair->frame = currentLevel->mappings[index].frame;
-                  return pair;
+                  // if vpn isn't null
+                  if (currentLevel->mappings[index].vpn != NULL) {
+                        Map *pair = new Map();
+                        pair->vpn = currentLevel->mappings[index].vpn;
+                        pair->frame = currentLevel->mappings[index].frame;
+                        return pair;
+                  } 
+                  // else if frame isn't null
+                  else if (currentLevel->mappings[index].frame != NULL) 
+                  {
+                        Map *pair = new Map();
+                        pair->vpn = currentLevel->mappings[index].vpn;
+                        pair->frame = currentLevel->mappings[index].frame;
+                        return pair;
+                  }
                }
             }
          }
@@ -41,7 +51,7 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
@@ -66,7 +76,7 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
       // initialize next level entries to NULL
       for (int i = 0; i < size; i++)
       {
-         nextLevel[i] = NULL;
+         nextLevel[i] = nullptr;
       }
 
       newLevel->nextLevel = nextLevel;             // assign NULL entries to new level
