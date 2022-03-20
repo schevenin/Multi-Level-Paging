@@ -93,18 +93,37 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
 int countPageTableSize(PageTable *pageTable, Level *level)
 {
    int sum = 0;
-   sum += sizeof(level);
+   sum += sizeof(level); // get size of current level
 
-   int entryCount = pageTable->entriesPerLevel[level->depth];
-   sum += entryCount * 8; // bits to bytes
+   int entryCount = pageTable->entriesPerLevel[level->depth]; // possible number of entries in current level
+
+   // for every possible entry in level
    for (int i = 0; i < entryCount; i++)
    {
-      if (level->nextLevel[i] != NULL)
+      // if the level is a leaf node
+      if (level->isLeaf)
       {
-         sum += countPageTableSize(pageTable, level->nextLevel[i]);
+         // add size of mappings
+         sum += sizeof(level->mappings[i]);
+      }
+      // if level isn't leaf node
+      else
+      {
+         // if another level at index exists
+         if (level->nextLevel[i] != NULL)
+         {
+
+            // get the size of the level and continue
+            sum += countPageTableSize(pageTable, level->nextLevel[i]);
+         }
       }
    }
 
-   sum += sizeof(pageTable);
+   // if last iteration, add the size of the page table
+   if (level->isLeaf)
+   {
+      sum += sizeof(pageTable);
+   }
+
    return sum;
 }
