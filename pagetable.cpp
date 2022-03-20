@@ -23,25 +23,23 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
                // if vpn == key
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
-                  // if vpn isn't null
+                  // if vpn isn't NULL
                   if (currentLevel->mappings[index].vpn != NULL) {
-                        Map *pair = new Map();
-                        pair->vpn = currentLevel->mappings[index].vpn;
-                        pair->frame = currentLevel->mappings[index].frame;
-                        return pair;
+                        return &currentLevel->mappings[index];
                   } 
-                  // else if frame isn't null
+                  // else if frame isn't NULL
                   else if (currentLevel->mappings[index].frame != NULL) 
                   {
-                        Map *pair = new Map();
-                        pair->vpn = currentLevel->mappings[index].vpn;
-                        pair->frame = currentLevel->mappings[index].frame;
-                        return pair;
+                        return &currentLevel->mappings[index];
+                  }
+                  // if both vpn and frame are NULL
+                  else 
+                  {
+                     
                   }
                }
             }
          }
-
          // not a leaf level
          else
          {
@@ -51,7 +49,7 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
       }
    }
 
-   return nullptr;
+   return NULL;
 }
 
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)

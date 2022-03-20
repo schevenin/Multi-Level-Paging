@@ -167,7 +167,7 @@ int main(int argc, char **argv)
                 Map *found = pageLookup(pageTable, pageTable->vpn);
 
                 // found exists in PageTable
-                if (found != nullptr)
+                if (found != NULL)
                 {
                     // TLB miss, PageTable hit
                     tlbhit = false;
