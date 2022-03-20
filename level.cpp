@@ -11,7 +11,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
         level->isLeaf = true; // set level as leaf
 
         // if mappings in level are all NULL
-        if (level->mappings == nullptr)
+        if (level->mappings == NULL)
         {
             level->mappings = new Map[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
         }
@@ -24,7 +24,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
     else
     {
         // if entry already exists at index
-        if (level->nextLevel[indexToInsert] != nullptr)
+        if (level->nextLevel[indexToInsert] != NULL)
         {
             // continue onto next level
             pageInsert(level->nextLevel[indexToInsert], address, frame);
@@ -33,7 +33,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
         else
         {
             // if entire next levels are NULL
-            if (level->nextLevel == nullptr)
+            if (level->nextLevel == NULL)
             {
                 level->nextLevel = new Level *[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
             }
@@ -49,7 +49,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
             // initialize next level entries to NULL
             for (int i = 0; i < size; i++)
             {
-                nextLevel[i] = nullptr;
+                nextLevel[i] = NULL;
             }
 
             newLevel->nextLevel = nextLevel;            // assign NULL entries to new level

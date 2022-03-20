@@ -24,18 +24,18 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
                   // if vpn isn't NULL
-                  if (currentLevel->mappings[index].vpn != NULL) {
-                        return &currentLevel->mappings[index];
-                  } 
-                  // else if frame isn't NULL
-                  else if (currentLevel->mappings[index].frame != NULL) 
+                  if (currentLevel->mappings[index].vpn != NULL)
                   {
-                        return &currentLevel->mappings[index];
+                     return &currentLevel->mappings[index];
+                  }
+                  // else if frame isn't NULL
+                  else if (currentLevel->mappings[index].frame != NULL)
+                  {
+                     return &currentLevel->mappings[index];
                   }
                   // if both vpn and frame are NULL
-                  else 
+                  else
                   {
-                     
                   }
                }
             }
