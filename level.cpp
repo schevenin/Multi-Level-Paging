@@ -2,58 +2,60 @@
 
 void pageInsert(Level *level, uint32_t address, uint32_t frame)
 {
-    int currentLevel = level->depth;
-    uint32_t index = level->pageTable->pageLookup[currentLevel];
+    int currentDepth = level->depth;
+    uint32_t indexToInsert = level->pageTable->pageLookup[currentDepth];
 
     // if leaf node
-    if (currentLevel == (level->pageTable->numLevels) - 1)
+    if (currentDepth == (level->pageTable->numLevels) - 1)
     {
-        level->isLeaf = true;
+        level->isLeaf = true; // set level as leaf
 
-        // if mappings in level is NULL
+        // if mappings in level are all NULL
         if (level->mappings == NULL)
         {
-            level->mappings = new Map[level->pageTable->entriesPerLevel[level->pageTable->numLevels - 1]];
+            level->mappings = new Map[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
         }
 
-        // add mapping
-        level->mappings[index].vpn = address;
-        level->mappings[index].frame = frame;
+        // insert VPN->PFN mapping at appropriate index
+        level->mappings[indexToInsert].vpn = address;
+        level->mappings[indexToInsert].frame = frame;
     }
     // is not leaf node
     else
     {
-        // if next level is null
-        if (level->nextLevel[index] == NULL)
+        // if entry already exists at index
+        if (level->nextLevel[indexToInsert] != NULL)
         {
+            // continue onto next level
+            pageInsert(level->nextLevel[indexToInsert], address, frame);
+        }
+        // if entry doesn't exist at index
+        else
+        {
+            // if entire next levels are NULL
+            if (level->nextLevel == NULL)
+            {
+                level->nextLevel = new Level *[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
+            }
 
-            // create new level and set depth to current depth + 1
-            Level *newLevel = new Level();
-            newLevel->pageTable = level->pageTable;
-            newLevel->depth = level->depth + 1;
+            Level *newLevel = new Level();          // create new level
+            newLevel->pageTable = level->pageTable; // assign PageTable to new level
+            newLevel->depth = level->depth + 1;     // assign new level depth + 1
 
             // array of level* entries based upon the number of entries in the new level
             int size = level->pageTable->entriesPerLevel[newLevel->depth];
             Level **nextLevel = new Level *[size];
 
-            // initialize next level to NULL
+            // initialize next level entries to NULL
             for (int i = 0; i < size; i++)
             {
                 nextLevel[i] = NULL;
             }
 
-            // assign array of level pointers to the new level
-            newLevel->nextLevel = nextLevel;
+            newLevel->nextLevel = nextLevel;            // assign NULL entries to new level
+            level->nextLevel[indexToInsert] = newLevel; // assign current level with pointer to the next
 
-            // assign current level with pointer to the next
-            level->nextLevel[index] = newLevel;
-
-            // insert new level
-            pageInsert(newLevel, address, frame);
-        }
-        else
-        {
-            pageInsert(level->nextLevel[index], address, frame);
+            pageInsert(newLevel, address, frame); // insert new level
         }
     }
 }

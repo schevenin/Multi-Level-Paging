@@ -2,10 +2,10 @@
 
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 {
-   uint32_t vpnKey = pageTable->vpn;              // looking for in PageTable
+   uint32_t vpnKey = virtualAddress;              // looking for in PageTable
    Level *currentLevel = pageTable->rootLevelPtr; // start search at root
 
-   // for each level
+   // for each level in PageTable
    for (int x = 0; x < pageTable->numLevels; x++)
    {
       // index of next level/map entry
@@ -20,12 +20,9 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
             // if level contains mappings
             if (currentLevel->mappings != NULL)
             {
-               // if the vpn is equal to the key
+               // if vpn == key
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
-                  // found mapping in page table
-                  pageTable->pageTableHits += 1;
-
                   // return the pair
                   Map *pair = new Map();
                   pair->vpn = currentLevel->mappings[index].vpn;
@@ -34,9 +31,11 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
                }
             }
          }
+
+         // not a leaf level
          else
          {
-            // not a leaf level, move down a level
+            // move to next level
             currentLevel = currentLevel->nextLevel[index];
          }
       }
@@ -50,33 +49,29 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
    // if a root level already exists
    if (pageTable->rootLevelPtr != NULL)
    {
+      // continue onto root level
       pageInsert(pageTable->rootLevelPtr, virtualAddress, frame);
    }
    // root level doesn't exist
    else
    {
-      // create root level
-      Level *newLevel = new Level();
-      pageTable->rootLevelPtr = newLevel;
-      newLevel->pageTable = pageTable;
-      newLevel->depth = 0;
+      Level *newLevel = new Level();   // create root level
+      newLevel->pageTable = pageTable; // assign PageTable to root level
+      newLevel->depth = 0;             // assign root depth
 
       // array of level* entries based upon the number of entries in the new level
       int size = pageTable->entriesPerLevel[newLevel->depth];
       Level **nextLevel = new Level *[size];
 
-      // initialize next level to NULL
+      // initialize next level entries to NULL
       for (int i = 0; i < size; i++)
       {
          nextLevel[i] = NULL;
       }
 
-      // assign NULL entries to new level
-      newLevel->nextLevel = nextLevel;
-      
-
-      // insert new level
-      pageInsert(newLevel, virtualAddress, frame);
+      newLevel->nextLevel = nextLevel;             // assign NULL entries to new level
+      pageTable->rootLevelPtr = newLevel;          // assign pointer to root level in PageTable
+      pageInsert(newLevel, virtualAddress, frame); // insert root level
    }
 }
 
@@ -87,16 +82,19 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
    return result;
 }
 
-int countPageTableSize(PageTable *pageTable, Level *level) {
+int countPageTableSize(PageTable *pageTable, Level *level)
+{
    int sum = 0;
    sum += sizeof(level);
-   
+
    int entryCount = pageTable->entriesPerLevel[level->depth];
    sum += entryCount * 8; // bits to bytes
-   for (int i = 0; i < entryCount; i++) {
-      if (level->nextLevel[i] != NULL) {
+   for (int i = 0; i < entryCount; i++)
+   {
+      if (level->nextLevel[i] != NULL)
+      {
          sum += countPageTableSize(pageTable, level->nextLevel[i]);
-      } 
+      }
    }
 
    sum += sizeof(pageTable);

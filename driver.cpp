@@ -46,7 +46,9 @@ int main(int argc, char **argv)
             // gets cache capacity of adresses
             cacheCapacity = atoi(optarg);
 
-            if (cacheCapacity < 0) {
+            // verify valid cache capacity
+            if (cacheCapacity < 0)
+            {
                 fprintf(stderr, "Cache capacity must be a number, greater than or equal to 0");
                 exit(EXIT_FAILURE);
             }
@@ -76,28 +78,28 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    pageTable->numLevels = argc - optind;                    // get number of levels in page table
-    pageTable->bitsPerLevel = new int[pageTable->numLevels]; // create array to store bit count per level
-    pageTable->bitShift = new int[pageTable->numLevels];     // create array to store bit shift per level
-    pageTable->entriesPerLevel = new int[pageTable->numLevels];
+    pageTable->numLevels = argc - optind;                       // get number of levels in page table
+    pageTable->bitsPerLevel = new int[pageTable->numLevels];    // create array to store bit count per level
+    pageTable->bitShift = new int[pageTable->numLevels];        // create array to store bit shift per level
+    pageTable->entriesPerLevel = new int[pageTable->numLevels]; // create array to store entry counts per level
 
-    // loop through each page level
+    // loop through each page level argument
     for (int i = optind; i < argc; i++)
     {
-
-        if (atoi(argv[i]) <= 0) {
-            fprintf(stderr, "Level %i page table must be at least 1 bit", i-optind);
+        // verify valid page size
+        if (atoi(argv[i]) <= 0)
+        {
+            fprintf(stderr, "Level %i page table must be at least 1 bit", i - optind);
             exit(EXIT_FAILURE);
         }
 
-        // counting bits at each level
         pageTable->bitsPerLevel[i - optind] = atoi(argv[i]);                                  // store bits count for level i
         pageTable->entriesPerLevel[i - optind] = pow(2, pageTable->bitsPerLevel[i - optind]); // store entries for level i
+        pageTable->totalPageBits += atoi(argv[i]);                                            // store total bits
 
-        // finding bitshift for each level
-        pageTable->totalPageBits += atoi(argv[i]);                                  // total page bits at level i
-        
-        if ((pageTable->totalPageBits) > 28) {
+        // verify valid bit sizes
+        if ((pageTable->totalPageBits) > 28)
+        {
             fprintf(stderr, "Too many bits used in page tables");
             exit(EXIT_FAILURE);
         }
@@ -106,7 +108,6 @@ int main(int argc, char **argv)
         pageTable->bitShift[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
     }
 
-    // create vpn, offset, masks
     pageSize = pow(2, pageTable->offsetSize);                                            // set page size
     pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
@@ -119,10 +120,10 @@ int main(int argc, char **argv)
         pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShift[i]);
     }
 
-    pageTable->addressCount = 0;
-    uint32_t newFrame = 0;
+    pageTable->addressCount = 0; // keep track of addresses processed from tracefile
+    uint32_t newFrame = 0;       // keep track of new frames mappend
 
-    // process each address within address to processing limits
+    // process each address in tracefile until address limit is reached
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
         // next address
@@ -131,22 +132,22 @@ int main(int argc, char **argv)
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
-            pageTable->addressCount++;                                                                                // keeping track of
+            pageTable->addressCount++;                                                                                // update address count
             pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
             pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
 
-            // page lookups per level
+            // set page lookups (indexes) per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
             }
 
-            uint32_t PFN; // PFN that is mapped to VPN
+            uint32_t PFN; // PFN associated with current VPN
 
-            // found in TLB
+            // found VPN in TLB
             if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
             {
-                // TLB hit                
+                // TLB hit
                 tlbhit = true;
                 pthit = false;
 
@@ -166,38 +167,46 @@ int main(int argc, char **argv)
                 Map *found = pageLookup(pageTable, pageTable->vpn);
 
                 // found VPN in PageTable
-                if (found != NULL)
+                if (found->vpn == pageTable->vpn)
                 {
                     // TLB miss, PageTable hit
                     tlbhit = false;
                     pthit = true;
 
-                    // check if cache is full
-                    if (TLB.size() == cacheCapacity)
+                    // update associated PFN
+                    PFN = found->frame;
+
+                    // if using cache
+                    if (cacheCapacity > 0)
                     {
-                        // find oldest VPN in LRU
-                        uint32_t oldestKey;
-                        uint32_t oldestValue;
-                        oldestValue = pageTable->addressCount;
-                        for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+
+                        // check if cache is full
+                        if (TLB.size() == cacheCapacity)
                         {
-                            if (oldestValue > iter->second)
+                            uint32_t oldestKey;                    // VPN
+                            uint32_t oldestValue;                  // access time
+                            oldestValue = pageTable->addressCount; // start with current access time
+
+                            // find oldest VPN in LRU
+                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                             {
-                                oldestKey = iter->first;
-                                oldestValue = iter->second;
+                                // LRU access time is older than current access time
+                                if (oldestValue > iter->second)
+                                {
+                                    oldestKey = iter->first;    // update oldest VPN
+                                    oldestValue = iter->second; // update oldest access time
+                                }
                             }
+
+                            // erase oldest from TLB and LRU
+                            TLB.erase(oldestKey);
+                            LRU.erase(oldestKey);
                         }
 
-                        // erase oldest from TLB and LRU
-                        TLB.erase(oldestKey);
-                        LRU.erase(oldestKey);
+                        // insert found VPN->PFN into TLB and LRU
+                        TLB[found->vpn] = found->frame;
+                        LRU[found->vpn] = pageTable->addressCount;
                     }
-
-                    // insert into TLB and LRU
-                    TLB[found->vpn] = found->frame;
-                    LRU[found->vpn] = pageTable->addressCount;
-
-                    PFN = found->frame;
                 }
 
                 // inserting VPN into PageTable
@@ -209,33 +218,43 @@ int main(int argc, char **argv)
 
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, pageTable->vpn, newFrame);
+                    pageTable->pageTableHits += 1; // update number of times a page was mapped
 
-                    // check if cache is full
-                    if (TLB.size() == cacheCapacity)
+                    // update associated PFN
+                    PFN = newFrame;
+
+                    // if using cache
+                    if (cacheCapacity > 0)
                     {
-                        // find oldest VPN in LRU
-                        uint32_t oldestKey;
-                        uint32_t oldestValue;
-                        oldestValue = pageTable->addressCount;
-                        for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+
+                        // check if cache is full
+                        if (TLB.size() == cacheCapacity)
                         {
-                            if (oldestValue > iter->second)
+                            uint32_t oldestKey;                    // VPN
+                            uint32_t oldestValue;                  // access time
+                            oldestValue = pageTable->addressCount; // start with current access time
+
+                            // find oldest VPN in LRU
+                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                             {
-                                oldestKey = iter->first;
-                                oldestValue = iter->second;
+                                // LRU access time is older than current access time
+                                if (oldestValue > iter->second)
+                                {
+                                    oldestKey = iter->first;    // update oldest VPN
+                                    oldestValue = iter->second; // update oldest access time
+                                }
                             }
+
+                            // erase oldest from TLB and LRU
+                            TLB.erase(oldestKey);
+                            LRU.erase(oldestKey);
                         }
 
-                        // erase oldest from TLB and LRU
-                        TLB.erase(oldestKey);
-                        LRU.erase(oldestKey);
+                        // insert found VPN->PFN into TLB and LRU
+                        TLB[pageTable->vpn] = newFrame;
+                        LRU[pageTable->vpn] = pageTable->addressCount;
                     }
 
-                    // insert into TLB and LRU
-                    TLB[pageTable->vpn] = newFrame;
-                    LRU[pageTable->vpn] = pageTable->addressCount;
-
-                    PFN = newFrame;
                     newFrame++;
                 }
             }
@@ -272,7 +291,6 @@ int main(int argc, char **argv)
     {
         report_bitmasks(pageTable->numLevels, pageTable->pageLookupMask);
     }
-
 
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
