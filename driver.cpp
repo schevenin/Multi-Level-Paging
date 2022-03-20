@@ -27,6 +27,7 @@ int main(int argc, char **argv)
     uint32_t VPN;                              // instantiate virtual page number
     uint32_t offset;                           // instantiate offset
     uint32_t PFN;                              // instantiate page frame number
+    uint32_t newFrame;                         // instantiate new frame
 
     int pageSize;                              // instantiate page size
     int addressProcessingLimit;                // instantiate address limit
@@ -134,8 +135,8 @@ int main(int argc, char **argv)
     }
 
     pageTable->addressCount = 0; // keep track of addresses processed from tracefile
-    uint32_t newFrame = 0;       // keep track of new frames mappend
-
+    newFrame = 0;                // keep track of new frames mappend
+    cacheHits = 0;               // keep track of amount of cache hits
     // process each address in tracefile until address limit is reached
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
