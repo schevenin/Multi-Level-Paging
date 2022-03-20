@@ -10,22 +10,27 @@
 
 int main(int argc, char **argv)
 {
-    PageTable *pageTable;      // instantiate page table
-    OutputOptionsType *output; // instantiate output object
+    PageTable *pageTable;                      // instantiate page table
+    OutputOptionsType *output;                 // instantiate output object
+    std::map<uint32_t, uint32_t> TLB;          // instantiate map of <VPN, PFN>
+    std::map<uint32_t, uint32_t> LRU;          // instantiate map of <VPN, Access Time>
+    FILE *tracefile;                           // instantiate tracefile
 
-    std::map<uint32_t, uint32_t> TLB; // cache table of <VPN, PFN>
-    std::map<uint32_t, uint32_t> LRU; // least recent accessed table of <VPN, Access Time>
+    uint32_t physicalAddress;                  // instantiate physical address
+    uint32_t VPN;                              // instantiate virtual page number
+    uint32_t offset;                           // instantiate offset
+    uint32_t PFN;                              // instantiate page frame number
 
-    uint32_t pageSize;          // instantiate page size
-    int addressProcessingLimit; // instantiate address limit
-    int cacheCapacity;          // instantiate size of TLB
-    int cacheHits;              // instantiate cache hits
-    char *outputType;           // instantiate type of output
-    FILE *tracefile;            // instantiate tracefile
-    uint32_t physicalAddress;   // instantiate physical address
-    bool tlbhit;                // instantiate TLB is hit
-    bool pthit;                 // instantiate page table is hit
+    int pageSize;                              // instantiate page size
+    int addressProcessingLimit;                // instantiate address limit
+    int cacheCapacity;                         // instantiate size of TLB
+    int cacheHits;                             // instantiate cache hits
 
+    bool tlbhit;                               // instantiate TLB is hit
+    bool pthit;                                // instantiate page table is hit
+
+    const char *outputType;                    // instantiate type of output
+    
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
     pageTable->offsetSize = DEFAULTOFFSET;     // initialize offset size
@@ -79,10 +84,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    pageTable->numLevels = argc - optind;                       // get number of levels in page table
-    pageTable->bitsPerLevel = new int[pageTable->numLevels];    // create array to store bit count per level
-    pageTable->bitShift = new int[pageTable->numLevels];        // create array to store bit shift per level
-    pageTable->entriesPerLevel = new int[pageTable->numLevels]; // create array to store entry counts per level
+    pageTable->numLevels = argc - optind;                        // get number of levels in page table
+    pageTable->bitsPerLevel = new int[pageTable->numLevels];     // create array to store bit count per level
+    pageTable->bitShiftPerLevel = new int[pageTable->numLevels]; // create array to store bit shift per level
+    pageTable->entriesPerLevel = new int[pageTable->numLevels];  // create array to store entry counts per level
 
     // loop through each page level argument
     for (int i = optind; i < argc; i++)
@@ -105,8 +110,8 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-        pageTable->offsetSize -= (atoi(argv[i]));                                   // offset at level i
-        pageTable->bitShift[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
+        pageTable->offsetSize -= (atoi(argv[i]));                                           // offset at level i
+        pageTable->bitShiftPerLevel[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
     }
 
     pageSize = pow(2, pageTable->offsetSize);                                            // set page size
@@ -118,7 +123,7 @@ int main(int argc, char **argv)
     // find page lookup masks at each level
     for (int i = 0; i < pageTable->numLevels; i++)
     {
-        pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShift[i]);
+        pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShiftPerLevel[i]);
     }
 
     pageTable->addressCount = 0; // keep track of addresses processed from tracefile
@@ -128,25 +133,23 @@ int main(int argc, char **argv)
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
         // next address
-        p2AddrTr *address_trace = new p2AddrTr();
+        p2AddrTr *address_trace = new p2AddrTr(); // instantiate and address trace
 
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
-            pageTable->addressCount++;                                                                                // update address count
-            pageTable->vpn = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
-            pageTable->offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
+            pageTable->addressCount++;
+            VPN = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
+            offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
 
             // set page lookups (indexes) per level
             for (int i = 0; i < pageTable->numLevels; i++)
             {
-                pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShift[i]);
+                pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShiftPerLevel[i]);
             }
 
-            uint32_t PFN; // PFN associated with current VPN
-
             // found VPN in TLB
-            if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
+            if (TLB.find(VPN) != TLB.end() && cacheCapacity > 0)
             {
                 // TLB hit
                 tlbhit = true;
@@ -154,10 +157,10 @@ int main(int argc, char **argv)
                 cacheHits += 1;
 
                 // PFN from TLB
-                PFN = TLB[pageTable->vpn];
+                PFN = TLB[VPN];
 
                 // update LRU with most recent addressCount
-                LRU[pageTable->vpn] = pageTable->addressCount;
+                LRU[VPN] = pageTable->addressCount;
             }
 
             // not found in TLB
@@ -166,7 +169,7 @@ int main(int argc, char **argv)
                 // TLB miss, walk PageTable
 
                 // search PageTable for VPN
-                Map *found = pageLookup(pageTable, pageTable->vpn);
+                Map *found = pageLookup(pageTable, address_trace->addr);
 
                 // found exists in PageTable
                 if (found != NULL)
@@ -182,7 +185,6 @@ int main(int argc, char **argv)
                     // if using cache
                     if (cacheCapacity > 0)
                     {
-
                         // check if cache is full
                         if (TLB.size() == cacheCapacity)
                         {
@@ -207,8 +209,8 @@ int main(int argc, char **argv)
                         }
 
                         // insert found VPN->PFN into TLB and LRU
-                        TLB[found->vpn] = found->frame;
-                        LRU[found->vpn] = pageTable->addressCount;
+                        TLB[VPN] = found->frame;
+                        LRU[VPN] = pageTable->addressCount;
                     }
                 }
 
@@ -220,7 +222,7 @@ int main(int argc, char **argv)
                     pthit = false;
 
                     // insert vpn and new frame into page table
-                    pageInsert(pageTable, pageTable->vpn, newFrame);
+                    pageInsert(pageTable, address_trace->addr, newFrame);
 
                     // update associated PFN
                     PFN = newFrame;
@@ -253,15 +255,15 @@ int main(int argc, char **argv)
                         }
 
                         // insert found VPN->PFN into TLB and LRU
-                        TLB[pageTable->vpn] = newFrame;
-                        LRU[pageTable->vpn] = pageTable->addressCount;
+                        TLB[VPN] = newFrame;
+                        LRU[VPN] = pageTable->addressCount;
                     }
 
                     newFrame++;
                 }
             }
 
-            physicalAddress = (PFN * pageSize) + pageTable->offset;
+            physicalAddress = (PFN * pageSize) + offset;
 
             // output that needs to loop
             if (strcmp(outputType, "virtual2physical") == 0)
@@ -274,7 +276,7 @@ int main(int argc, char **argv)
             }
             if (strcmp(outputType, "offset") == 0)
             {
-                fprintf(stdout, "%08X\n", pageTable->offset);
+                fprintf(stdout, "%08X\n", offset);
             }
             if (strcmp(outputType, "v2p_tlb_pt") == 0)
             {
@@ -294,6 +296,5 @@ int main(int argc, char **argv)
         report_bitmasks(pageTable->numLevels, pageTable->pageLookupMask);
     }
 
-    // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;
 };

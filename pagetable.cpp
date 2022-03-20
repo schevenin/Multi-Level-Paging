@@ -2,8 +2,8 @@
 
 Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 {
-   uint32_t vpnKey = virtualAddress;              // looking for in PageTable
-   Level *currentLevel = pageTable->rootLevelPtr; // start search at root
+   uint32_t vpnKey = virtualAddressToPageNum(virtualAddress, pageTable->vpnMask, pageTable->offsetSize); // looking for in PageTable
+   Level *currentLevel = pageTable->rootLevelPtr;                                                        // start search at root
 
    // for each level in PageTable
    for (int x = 0; x < pageTable->numLevels; x++)
@@ -20,23 +20,10 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
             // if level contains mappings
             if (currentLevel->mappings != NULL)
             {
-               // if vpn == key
+               // if vpnKey is found
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
-                  // if vpn isn't NULL
-                  if (currentLevel->mappings[index].vpn != NULL)
-                  {
-                     return &currentLevel->mappings[index];
-                  }
-                  // else if frame isn't NULL
-                  else if (currentLevel->mappings[index].frame != NULL)
-                  {
-                     return &currentLevel->mappings[index];
-                  }
-                  // if both vpn and frame are NULL
-                  else
-                  {
-                  }
+                  return &currentLevel->mappings[index];
                }
             }
          }
@@ -52,13 +39,13 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
    return NULL;
 }
 
-void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
+void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame)
 {
    // if a root level already exists
    if (pageTable->rootLevelPtr != NULL)
    {
       // continue onto root level
-      pageInsert(pageTable->rootLevelPtr, virtualAddress, frame);
+      pageInsert(pageTable->rootLevelPtr, virtualAddress, newFrame);
    }
    // root level doesn't exist
    else
@@ -79,7 +66,7 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t frame)
 
       newLevel->nextLevel = nextLevel;             // assign NULL entries to new level
       pageTable->rootLevelPtr = newLevel;          // assign pointer to root level in PageTable
-      pageInsert(newLevel, virtualAddress, frame); // insert root level
+      pageInsert(newLevel, virtualAddress, newFrame); // insert root level
    }
 }
 

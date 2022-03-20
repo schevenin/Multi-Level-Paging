@@ -1,9 +1,10 @@
 #include "pagetable.h"
 
-void pageInsert(Level *level, uint32_t address, uint32_t frame)
+void pageInsert(Level *level, uint32_t virtualAddress, uint32_t newFrame)
 {
     int currentDepth = level->depth;
     uint32_t indexToInsert = level->pageTable->pageLookup[currentDepth];
+    uint32_t vpn = virtualAddressToPageNum(virtualAddress, level->pageTable->vpnMask, level->pageTable->offsetSize);
 
     // if leaf node
     if (currentDepth == (level->pageTable->numLevels) - 1)
@@ -14,11 +15,19 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
         if (level->mappings == NULL)
         {
             level->mappings = new Map[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
+
+            // initialize new mappings array to invalid -1's
+            // ensures that vpn 0/NULL isn't mistakenly found
+            for (int i = 0; i < level->pageTable->entriesPerLevel[currentDepth]; i++)
+            {
+                level->mappings[i].vpn = -1;
+                level->mappings[i].frame = -1;
+            }
         }
 
         // insert VPN->PFN mapping at appropriate index
-        level->mappings[indexToInsert].vpn = address;
-        level->mappings[indexToInsert].frame = frame;
+        level->mappings[indexToInsert].vpn = vpn;
+        level->mappings[indexToInsert].frame = newFrame;
     }
     // is not leaf node
     else
@@ -27,7 +36,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
         if (level->nextLevel[indexToInsert] != NULL)
         {
             // continue onto next level
-            pageInsert(level->nextLevel[indexToInsert], address, frame);
+            pageInsert(level->nextLevel[indexToInsert], virtualAddress, newFrame);
         }
         // if entry doesn't exist at index
         else
@@ -55,7 +64,7 @@ void pageInsert(Level *level, uint32_t address, uint32_t frame)
             newLevel->nextLevel = nextLevel;            // assign NULL entries to new level
             level->nextLevel[indexToInsert] = newLevel; // assign current level with pointer to the next
 
-            pageInsert(newLevel, address, frame); // insert new level
+            pageInsert(newLevel, virtualAddress, newFrame); // insert new level
         }
     }
 }
