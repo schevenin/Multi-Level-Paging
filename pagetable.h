@@ -13,7 +13,7 @@
 #define DEFAULTADDRLIMIT -1
 #define DEFAULTOFFSET 32
 #define DEFAULTSIZE 32
-#define DEFAULTCACHESIZE -1
+#define DEFAULTCACHESIZE 0
 
 struct PageTable
 {
@@ -24,6 +24,8 @@ struct PageTable
   int pageSize;         // gets pagesize
   int totalPageBits;    // sum of all pages bit sizes
   int addressCount;     // keeps track of instructions processed
+  int totalBytes;       // total number of bytes across page table
+  int pageTableHits;    // number of times a page was mapped
   int *bitsPerLevel;    // the number of bits per level
   int *bitShift;        // bitshifts per level
   int *entriesPerLevel; // amount of entries per level

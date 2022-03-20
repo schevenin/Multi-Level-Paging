@@ -128,7 +128,7 @@ int main(int argc, char **argv)
             // found in TLB
             if (TLB.find(pageTable->vpn) != TLB.end() && cacheCapacity > 0)
             {
-                // TLB hit
+                // TLB hit                
                 tlbhit = true;
                 pthit = false;
 
@@ -218,6 +218,7 @@ int main(int argc, char **argv)
                     LRU[pageTable->vpn] = pageTable->addressCount;
 
                     PFN = newFrame;
+                    std::cout << "Frame assigned, there was a miss. " << PFN << std::endl;
                     newFrame++;
                 }
             }
@@ -247,7 +248,7 @@ int main(int argc, char **argv)
     // output that doesn't need to loop
     if (strcmp(outputType, "summary") == 0)
     {
-        report_summary(pageSize, 0, 0, 0, newFrame+1, 0);
+        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, pageTable->totalBytes);
     }
 
     if (strcmp(outputType, "bitmasks") == 0)
@@ -255,7 +256,6 @@ int main(int argc, char **argv)
         report_bitmasks(pageTable->numLevels, pageTable->pageLookupMask);
     }
 
-    std::cout << "Frames: " << std::dec << newFrame + 1 << std::endl;
 
     // report_summary(pagetable->pageSize, 0, 0, pagetable->instructionsProcessed, 0, 0); // creates summary, need to update 0's to actual arguments
     return 0;

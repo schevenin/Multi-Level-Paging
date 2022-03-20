@@ -23,6 +23,9 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
                // if the vpn is equal to the key
                if (currentLevel->mappings[index].vpn == vpnKey)
                {
+                  // found mapping in page table
+                  pageTable->pageTableHits += 1;
+
                   // return the pair
                   Map *pair = new Map();
                   pair->vpn = currentLevel->mappings[index].vpn;
