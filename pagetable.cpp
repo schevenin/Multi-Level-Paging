@@ -87,7 +87,7 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
    return result;
 }
 
-void countPageTableSize(PageTable *pageTable) {
+int countPageTableSize(PageTable *pageTable) {
 
    Level *currentLevel = pageTable->rootLevelPtr; // start search at root
    int totalBytes = 0;
@@ -126,4 +126,7 @@ void countPageTableSize(PageTable *pageTable) {
       }
    }
 
+
+   
+   return totalBytes;
 }

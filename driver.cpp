@@ -47,7 +47,7 @@ int main(int argc, char **argv)
             cacheCapacity = atoi(optarg);
 
             if (cacheCapacity < 0) {
-                fprintf("Cache capacity must be a number, greater than or equal to 0");
+                fprintf(stderr, "Cache capacity must be a number, greater than or equal to 0");
                 exit(EXIT_FAILURE);
             }
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     for (int i = optind; i < argc; i++)
     {
 
-        if (!atoi(argv[i]) > 0) {
+        if (atoi(argv[i]) <= 0) {
             fprintf(stderr, "Level %i page table must be at least 1 bit", i-optind);
             exit(EXIT_FAILURE);
         }
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         // finding bitshift for each level
         pageTable->totalPageBits += atoi(argv[i]);                                  // total page bits at level i
         
-        if (!pageTable->totalPageBits <= 28) {
+        if ((pageTable->totalPageBits) > 28) {
             fprintf(stderr, "Too many bits used in page tables");
             exit(EXIT_FAILURE);
         }
@@ -265,7 +265,7 @@ int main(int argc, char **argv)
     // output that doesn't need to loop
     if (strcmp(outputType, "summary") == 0)
     {
-        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, pageTable->totalBytes);
+        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable));
     }
 
     if (strcmp(outputType, "bitmasks") == 0)
