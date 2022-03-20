@@ -19,6 +19,7 @@ int main(int argc, char **argv)
     uint32_t pageSize;          // instantiate page size
     int addressProcessingLimit; // instantiate address limit
     int cacheCapacity;          // instantiate size of TLB
+    int cacheHits;              // instantiate cache hits
     char *outputType;           // instantiate type of output
     FILE *tracefile;            // instantiate tracefile
     uint32_t physicalAddress;   // instantiate physical address
@@ -150,6 +151,7 @@ int main(int argc, char **argv)
                 // TLB hit
                 tlbhit = true;
                 pthit = false;
+                cacheHits += 1;
 
                 // PFN from TLB
                 PFN = TLB[pageTable->vpn];
@@ -284,7 +286,7 @@ int main(int argc, char **argv)
     // output that doesn't need to loop
     if (strcmp(outputType, "summary") == 0)
     {
-        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable, pageTable->rootLevelPtr));
+        report_summary(pageSize, cacheHits, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable, pageTable->rootLevelPtr));
     }
 
     if (strcmp(outputType, "bitmasks") == 0)
