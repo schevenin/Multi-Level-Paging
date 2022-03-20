@@ -265,7 +265,7 @@ int main(int argc, char **argv)
     // output that doesn't need to loop
     if (strcmp(outputType, "summary") == 0)
     {
-        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable));
+        report_summary(pageSize, cacheCapacity, pageTable->pageTableHits, pageTable->addressCount, newFrame, countPageTableSize(pageTable, pageTable->rootLevelPtr));
     }
 
     if (strcmp(outputType, "bitmasks") == 0)
