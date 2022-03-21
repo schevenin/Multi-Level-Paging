@@ -262,13 +262,11 @@ int main(int argc, char **argv)
                             
                             // find oldest VPN in LRU
                             oldestValue = pageTable->addressCount; // start with current access time
-                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                            for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
                             {
-                                // LRU access time is older than current access time
-                                if (oldestValue > iter->second)
-                                {
-                                    oldestKey = iter->first;    // update oldest VPN
-                                    oldestValue = iter->second; // update oldest access time
+                                if (LRU[iter->first] < oldestValue) {
+                                    oldestKey = iter->first;
+                                    oldestValue = LRU[iter->first];
                                 }
                             }
 
@@ -280,6 +278,20 @@ int main(int argc, char **argv)
                         // if LRU is full and VPN doesn't already exist in LRU
                         if ((LRU.size() == lruCapacity) && (LRU[VPN] == NULL))
                         {
+                            LRU[VPN] = -1;
+
+                            // find oldest VPN in LRU
+                            oldestValue = pageTable->addressCount; // start with current access time
+                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                            {
+                                // LRU access time is older than current access time
+                                if (iter->second < oldestValue)
+                                {
+                                    oldestKey = iter->first;    // update oldest VPN
+                                    oldestValue = iter->second; // update oldest access time
+                                }
+                            }
+
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
                             printf("Erasing from LRU: %08X\n", oldestKey);
@@ -320,13 +332,11 @@ int main(int argc, char **argv)
                             
                             // find oldest VPN in LRU
                             oldestValue = pageTable->addressCount; // start with current access time
-                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                            for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
                             {
-                                // LRU access time is older than current access time
-                                if (oldestValue > iter->second)
-                                {
-                                    oldestKey = iter->first;    // update oldest VPN
-                                    oldestValue = iter->second; // update oldest access time
+                                if (LRU[iter->first] < oldestValue) {
+                                    oldestKey = iter->first;
+                                    oldestValue = LRU[iter->first];
                                 }
                             }
 
@@ -338,6 +348,21 @@ int main(int argc, char **argv)
                         // if LRU is full and VPN doesn't already exist in LRU
                         if ((LRU.size() == lruCapacity) && (LRU[VPN] == NULL))
                         {
+                            LRU[VPN] = -1;
+
+                            // find oldest VPN in LRU
+                            oldestValue = pageTable->addressCount; // start with current access time
+                            for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                            {
+                                // LRU access time is older than current access time
+                                if (iter->second < oldestValue)
+                                {
+                                    oldestKey = iter->first;    // update oldest VPN
+                                    oldestValue = iter->second; // update oldest access time
+                                }
+
+                            }
+
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
                             printf("Erasing from LRU: %08X\n", oldestKey);
