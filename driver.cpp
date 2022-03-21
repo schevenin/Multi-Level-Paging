@@ -31,20 +31,23 @@ int main(int argc, char **argv)
 
     int pageSize;                              // instantiate page size
     int addressProcessingLimit;                // instantiate address limit
-    int cacheCapacity;                         // instantiate size of TLB
+    int tlbCapacity;                           // instantiate size of TLB
+    int lruCapacity;                           // instantiate size of LRU
     int cacheHits;                             // instantiate cache hits
 
-    bool tlbhit;                               // instantiate TLB is hit
-    bool pthit;                                // instantiate page table is hit
+    bool tlbHit;                               // instantiate TLB is hit
+    bool ptHit;                                // instantiate page table is hit
 
     const char *outputType;                    // instantiate type of output
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
-    pageTable->offsetSize = DEFAULTOFFSET;     // initialize offset size
+    pageTable->offsetSize = DEFAULTSIZE;     // initialize offset size
     addressProcessingLimit = DEFAULTADDRLIMIT; // initialize address limit
-    cacheCapacity = DEFAULTCACHESIZE;          // initialize size of TLB
+    tlbCapacity = DEFAULTTLBSIZE;              // initialize size of TLB
+    lruCapacity = DEFAULTLRUSIZE;              // initialize size of LRU
     outputType = DEFAULTOUTPUTTYPE;            // initialize output type
+
 
     // check optional arguments
     int opt;
@@ -58,10 +61,10 @@ int main(int argc, char **argv)
             break;
         case 'c':
             // gets cache capacity of adresses
-            cacheCapacity = atoi(optarg);
+            tlbCapacity = atoi(optarg);
 
             // verify valid cache capacity
-            if (cacheCapacity < 0)
+            if (tlbCapacity < 0)
             {
                 fprintf(stderr, "Cache capacity must be a number, greater than or equal to 0");
                 exit(EXIT_FAILURE);
@@ -76,11 +79,6 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-
-    std::cout << "Arguments: " << std::endl;
-    std::cout << "-n: " << addressProcessingLimit << std::endl;
-    std::cout << "-c: " << cacheCapacity << std::endl;
-    std::cout << "-o: " << outputType << std::endl;
 
     // require at least 2 arguments
     if (argc - optind < 2)
@@ -97,14 +95,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "Tracefile working." << std::endl;
-
     pageTable->numLevels = argc - optind;                        // get number of levels in page table
     pageTable->bitsPerLevel = new int[pageTable->numLevels];     // create array to store bit count per level
     pageTable->bitShiftPerLevel = new int[pageTable->numLevels]; // create array to store bit shift per level
     pageTable->entriesPerLevel = new int[pageTable->numLevels];  // create array to store entry counts per level
-
-    std::cout << "numLevels: " << pageTable->numLevels << std::endl;
 
     // loop through each page level argument
     for (int i = optind; i < argc; i++)
@@ -131,34 +125,11 @@ int main(int argc, char **argv)
         pageTable->bitShiftPerLevel[i - optind] = (DEFAULTSIZE - pageTable->totalPageBits); // amount of bit shift at level i
     }
 
-    std::cout << "bitsPerLevel: " << std::endl;
-    for (int i = 0; i < argc-optind; i++) {
-        std::cout << "Level " << i << ": " << pageTable->bitsPerLevel[i] << std::endl;
-    }
-
-    std::cout << "entriesPerLevel: " << std::endl;
-    for (int i = 0; i < argc-optind; i++) {
-        std::cout << "Level " << i << ": " << pageTable->entriesPerLevel[i] << std::endl;
-    }
-
-    std::cout << "totalPageBits: " << pageTable->totalPageBits << std::endl;
-
-    std::cout << "offsetSize: " << pageTable->offsetSize << std::endl;
-
-    std::cout << "bitShiftPerLevel: " << std::endl;
-    for (int i = 0; i < argc-optind; i++) {
-        std::cout << "Level " << i << ": " << pageTable->bitShiftPerLevel[i] << std::endl;
-    }
-
     pageSize = pow(2, pageTable->offsetSize);                                            // set page size
     pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
     pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
     pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
     pageTable->pageLookup = new uint32_t[pageTable->numLevels];                          // array of page lookup masks
-
-    std::cout << "pageSize: " << pageSize << std::endl;
-    std::cout << "vpnMask: " << std::hex << pageTable->vpnMask << std::endl;
-    std::cout << "offsetMask: " << std::hex << pageTable->offsetMask << std::endl;
 
     // find page lookup masks at each level
     for (int i = 0; i < pageTable->numLevels; i++)
@@ -166,19 +137,9 @@ int main(int argc, char **argv)
         pageTable->pageLookupMask[i] = ((1 << pageTable->bitsPerLevel[i]) - 1) << (pageTable->bitShiftPerLevel[i]);
     }
 
-    std::cout << "pageLookupMask: " << std::endl;
-    for (int i = 0; i < pageTable->numLevels; i++)
-    {
-        std::cout << "Level " << i << ": " << std::hex << pageTable->pageLookupMask[i];
-    }
-
     pageTable->addressCount = 0; // keep track of addresses processed from tracefile
     newFrame = 0;                // keep track of new frames mappend
     cacheHits = 0;               // keep track of amount of cache hits
-
-    std::cout << "addressCount = 0" << std::endl;
-    std::cout << "newFrame = 0" << std::endl;
-    std::cout << "cacheHits = 0" << std::endl;
 
     // process each address in tracefile until address limit is reached
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
@@ -186,21 +147,11 @@ int main(int argc, char **argv)
         // next address
         p2AddrTr *address_trace = new p2AddrTr(); // instantiate and address trace
 
-        std::cout << std::endl;
-        std::cout << "=================" << std::endl;
-        
-
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
             pageTable->addressCount++;
-
-            std::cout << "addressCount: " << std::dec << pageTable->addressCount << std::endl;
-
             VPN = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
-
-            printf("VPN: %08X\n", VPN);
-
             offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
 
             // set page lookups (indexes) per level
@@ -210,13 +161,11 @@ int main(int argc, char **argv)
             }
 
             // found VPN in TLB
-            if (TLB.find(VPN) != TLB.end() && cacheCapacity > 0)
+            if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0)
             {
-                printf("\n%08X found in TLB.\n", VPN);
-
                 // TLB hit
-                tlbhit = true;
-                pthit = false;
+                tlbHit = true;
+                ptHit = false;
                 cacheHits += 1;
 
                 // PFN from TLB
@@ -238,27 +187,20 @@ int main(int argc, char **argv)
                 if (found != NULL)
                 {
 
-                    std::cout << "\nTLB miss, PageTable hit\n" << std::endl; 
-
                     // TLB miss, PageTable hit
-                    tlbhit = false;
-                    pthit = true;
+                    tlbHit = false;
+                    ptHit = true;
                     pageTable->pageTableHits += 1;
 
                     // update associated PFN
                     PFN = found->frame;
 
-                    printf("Found PFN: %d\n", PFN);
-                    printf("Inserting into TLB: <%08X, %d>\n", VPN, newFrame);
-
                     // if using cache
-                    if (cacheCapacity > 0)
+                    if (tlbCapacity > 0)
                     {
                         // check if cache is full
-                        if (TLB.size() == cacheCapacity)
+                        if (TLB.size() == tlbCapacity)
                         {
-                            std::cout << "Cache is full. Replacing. " << std::endl;
-
                             uint32_t oldestKey;                    // VPN
                             uint32_t oldestValue;                  // access time
                             oldestValue = pageTable->addressCount; // start with current access time
@@ -273,8 +215,6 @@ int main(int argc, char **argv)
                                     oldestValue = iter->second; // update oldest access time
                                 }
                             }
-
-                            printf("Removing oldest from LRU and TLB: <%08X, %08X>\n", oldestKey, oldestValue);
 
                             // erase oldest from TLB and LRU
                             TLB.erase(oldestKey);
@@ -295,10 +235,8 @@ int main(int argc, char **argv)
                 {
                     // TLB miss, PageTable miss
 
-                    std::cout << "\nTLB miss, PageTable miss\n" << std::endl;
-
-                    tlbhit = false;
-                    pthit = false;
+                    tlbHit = false;
+                    ptHit = false;
 
                     // insert vpn and new frame into page table
                     pageInsert(pageTable, address_trace->addr, newFrame);
@@ -307,14 +245,11 @@ int main(int argc, char **argv)
                     PFN = newFrame;
 
                     // if using cache
-                    if (cacheCapacity > 0)
+                    if (tlbCapacity > 0)
                     {
                         // check if cache is full
-                        if (TLB.size() == cacheCapacity)
+                        if (TLB.size() == tlbCapacity)
                         {
-
-                            std::cout << "Cache is full. Replacing. " << std::endl;
-
                             uint32_t oldestKey;                    // VPN
                             uint32_t oldestValue;                  // access time
                             oldestValue = pageTable->addressCount; // start with current access time
@@ -331,39 +266,19 @@ int main(int argc, char **argv)
                                 }
                             }
 
-                            printf("Removing oldest from LRU and TLB: <%08X, %08X>\n", oldestKey, oldestValue);
-
                             // erase oldest from TLB and LRU
                             TLB.erase(oldestKey);
                             LRU.erase(oldestKey);
-
-                        
                         }
 
                         // insert found VPN->PFN into TLB and LRU
                         TLB[VPN] = newFrame;
                         LRU[VPN] = pageTable->addressCount;
-
                     }
 
                     newFrame++;
                 }   
 
-            }
-
-            std::cout << std::endl;
-
-            if (cacheCapacity > 0) {
-                std::cout << "TLB: " << std::endl;
-                for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
-                {
-                    printf("<%08X, %d>\n", iter->first, iter->second);
-                }
-                std::cout << "LRU: " << std::endl;
-                for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
-                {
-                    printf("<%08X, %d>\n", iter->first, iter->second);
-                }
             }
 
             physicalAddress = (PFN * pageSize) + offset;
@@ -383,7 +298,7 @@ int main(int argc, char **argv)
             }
             if (strcmp(outputType, "v2p_tlb_pt") == 0)
             {
-                report_v2pUsingTLB_PTwalk(address_trace->addr, physicalAddress, tlbhit, pthit);
+                report_v2pUsingTLB_PTwalk(address_trace->addr, physicalAddress, tlbHit, ptHit);
             }
         }
     }

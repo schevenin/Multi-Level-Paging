@@ -11,9 +11,9 @@
 #include "output_mode_helpers.h"
 
 #define DEFAULTADDRLIMIT -1
-#define DEFAULTOFFSET 32
 #define DEFAULTSIZE 32
-#define DEFAULTCACHESIZE 0
+#define DEFAULTTLBSIZE 0
+#define DEFAULTLRUSIZE 10
 
 struct PageTable
 {
