@@ -8,8 +8,8 @@
 #include <fstream>
 #include <unistd.h>
 
-
-void printTLB(std::map<uint32_t, uint32_t> TLB) {
+void printTLB(std::map<uint32_t, uint32_t> TLB)
+{
     printf("TLB: \n");
     for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
     {
@@ -18,7 +18,8 @@ void printTLB(std::map<uint32_t, uint32_t> TLB) {
     printf("\n");
 };
 
-void printLRU(std::map<uint32_t, uint32_t> LRU) {
+void printLRU(std::map<uint32_t, uint32_t> LRU)
+{
     printf("LRU: \n");
     for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
     {
@@ -29,44 +30,43 @@ void printLRU(std::map<uint32_t, uint32_t> LRU) {
 
 /**
  * @brief Main Execution of Multi Level Paging with TLB Cache
- * 
+ *
  * @param argc integer amount of arguments
  * @param argv character array of arguments
  * @return int value indicating exit status
  */
 int main(int argc, char **argv)
 {
-    PageTable *pageTable;                      // instantiate page table
-    OutputOptionsType *output;                 // instantiate output object
-    std::map<uint32_t, uint32_t> TLB;          // instantiate map of <VPN, PFN>
-    std::map<uint32_t, uint32_t> LRU;          // instantiate map of <VPN, Access Time>
-    FILE *tracefile;                           // instantiate tracefile
+    PageTable *pageTable;             // instantiate page table
+    OutputOptionsType *output;        // instantiate output object
+    std::map<uint32_t, uint32_t> TLB; // instantiate map of <VPN, PFN>
+    std::map<uint32_t, uint32_t> LRU; // instantiate map of <VPN, Access Time>
+    FILE *tracefile;                  // instantiate tracefile
 
-    uint32_t physicalAddress;                  // instantiate physical address
-    uint32_t VPN;                              // instantiate virtual page number
-    uint32_t offset;                           // instantiate offset
-    uint32_t PFN;                              // instantiate page frame number
-    uint32_t newFrame;                         // instantiate new frame
+    uint32_t physicalAddress; // instantiate physical address
+    uint32_t VPN;             // instantiate virtual page number
+    uint32_t offset;          // instantiate offset
+    uint32_t PFN;             // instantiate page frame number
+    uint32_t newFrame;        // instantiate new frame
 
-    int pageSize;                              // instantiate page size
-    int addressProcessingLimit;                // instantiate address limit
-    int tlbCapacity;                           // instantiate size of TLB
-    int lruCapacity;                           // instantiate size of LRU
-    int cacheHits;                             // instantiate cache hits
+    int pageSize;               // instantiate page size
+    int addressProcessingLimit; // instantiate address limit
+    int tlbCapacity;            // instantiate size of TLB
+    int lruCapacity;            // instantiate size of LRU
+    int cacheHits;              // instantiate cache hits
 
-    bool tlbHit;                               // instantiate TLB is hit
-    bool ptHit;                                // instantiate page table is hit
+    bool tlbHit; // instantiate TLB is hit
+    bool ptHit;  // instantiate page table is hit
 
-    const char *outputType;                    // instantiate type of output
+    const char *outputType; // instantiate type of output
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
-    pageTable->offsetSize = DEFAULTSIZE;     // initialize offset size
+    pageTable->offsetSize = DEFAULTSIZE;       // initialize offset size
     addressProcessingLimit = DEFAULTADDRLIMIT; // initialize address limit
     tlbCapacity = DEFAULTTLBSIZE;              // initialize size of TLB
     lruCapacity = DEFAULTLRUSIZE;              // initialize size of LRU
     outputType = DEFAULTOUTPUTTYPE;            // initialize output type
-
 
     // check optional arguments
     int opt;
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
     tracefile = fopen(argv[optind++], "rb");
     if (tracefile == NULL)
     {
-        std::cout << "Unable to open <<" << argv[optind-1] << ">>" << std::endl;
+        std::cout << "Unable to open <<" << argv[optind - 1] << ">>" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
         // verify valid page size
         if (atoi(argv[i]) <= 0)
         {
-            std::cout << "Level " << (i-optind) << " page table must be at least 1 bit" << std::endl;
+            std::cout << "Level " << (i - optind) << " page table must be at least 1 bit" << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -179,15 +179,14 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShiftPerLevel[i]);
             }
 
-
-            printf("====================\n");
-            printf("VPN: %08X\n", VPN);
+            // printf("====================\n");
+            // printf("VPN: %08X\n", VPN);
 
             // found VPN in TLB
-            if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0) 
+            if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0)
             {
                 // TLB hit
-                printf("\nTLB hit\n");
+                // printf("\nTLB hit\n");
                 tlbHit = true;
                 ptHit = false;
                 cacheHits += 1;
@@ -197,11 +196,14 @@ int main(int argc, char **argv)
 
                 // if TLB > LRU
                 // if LRU does not contain VPN
-                if (LRU[VPN] == NULL) {
 
-                    // if LRU is full, remove least recently used
-                    if (LRU.size() == lruCapacity) {
-                    
+                // if LRU is full, remove least recently used
+                // erase oldest from LRU
+                if (LRU[VPN] == NULL)
+                {
+                    if (TLB.size() == tlbCapacity)
+                    {
+                        LRU[VPN] = -1;
                         // remove least recently used
                         uint32_t oldestKey;                    // VPN
                         uint32_t oldestValue;                  // access time
@@ -210,24 +212,23 @@ int main(int argc, char **argv)
                         // find oldest VPN in LRU
                         for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                         {
-
                             // LRU access time is older than current access time
-                            if (oldestValue > iter->second)
+                            if (iter->second< oldestValue && iter->second != -1)
                             {
                                 oldestKey = iter->first;    // update oldest VPN
                                 oldestValue = iter->second; // update oldest access time
                             }
                         }
 
-                        // erase oldest from LRU
                         LRU.erase(oldestKey);
-                        printf("Erasing from LRU: %08X\n", oldestKey);
+                        // printf("Erasing from LRU: %08X\n", oldestKey);
                     }
-                } 
+                }
+                
 
                 // update LRU with most recent addressCount
                 LRU[VPN] = pageTable->addressCount;
-                printf("Updating/Inserting in LRU: %08X\n", VPN);
+                // printf("Updating/Inserting in LRU: %08X\n", VPN);
             }
 
             // not found in TLB
@@ -243,7 +244,7 @@ int main(int argc, char **argv)
                 {
 
                     // TLB miss, PageTable hit
-                    printf("\nTLB miss, PT hit\n");
+                    // printf("\nTLB miss, PT hit\n");
                     tlbHit = false;
                     ptHit = true;
                     pageTable->pageTableHits += 1;
@@ -254,32 +255,35 @@ int main(int argc, char **argv)
                     // if using cache
                     if (tlbCapacity > 0)
                     {
-                        uint32_t oldestKey;                    // VPN
-                        uint32_t oldestValue;                  // access time
+                        uint32_t oldestKey;   // VPN
+                        uint32_t oldestValue; // access time
 
                         // if TLB is full
-                        if (TLB.size() == tlbCapacity) {
-                            
-                            if (tlbCapacity > lruCapacity) {
+                        if (TLB.size() == tlbCapacity)
+                        {
+
+                            if (tlbCapacity > lruCapacity)
+                            {
 
                                 // find oldest VPN in LRU
                                 oldestValue = pageTable->addressCount; // start with current access time
                                 for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                                 {
-                                    if (iter->second < oldestValue) {
+                                    if (iter->second < oldestValue)
+                                    {
                                         oldestValue = iter->second;
                                         oldestKey = iter->first;
                                     }
-
-                                    std::cout << "Oldest Key: " << std::hex << oldestKey << std::endl;
                                 }
-
-                            } else {
+                            }
+                            else
+                            {
                                 // find oldest VPN in LRU
                                 oldestValue = pageTable->addressCount; // start with current access time
                                 for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
                                 {
-                                    if (LRU[iter->first] < oldestValue) {
+                                    if (LRU[iter->first] < oldestValue)
+                                    {
                                         oldestKey = iter->first;
                                         oldestValue = LRU[iter->first];
                                     }
@@ -288,7 +292,7 @@ int main(int argc, char **argv)
 
                             // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
-                            printf("Erasing from TLB: %08X\n", oldestKey);
+                            // printf("Erasing from TLB: %08X\n", oldestKey);
                         }
 
                         // if LRU is full and VPN doesn't already exist in LRU
@@ -310,15 +314,15 @@ int main(int argc, char **argv)
 
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
-                            printf("Erasing from LRU: %08X\n", oldestKey);
+                            // printf("Erasing from LRU: %08X\n", oldestKey);
                         }
 
                         // insert found VPN->PFN into TLB and LRU
                         TLB[VPN] = found->frame;
                         LRU[VPN] = pageTable->addressCount;
 
-                        printf("Updating/Inserting in TLB: %08X\n", VPN);
-                        printf("Updating/Inserting in LRU: %08X\n", VPN);
+                        // printf("Updating/Inserting in TLB: %08X\n", VPN);
+                        // printf("Updating/Inserting in LRU: %08X\n", VPN);
                     }
                 }
 
@@ -326,7 +330,7 @@ int main(int argc, char **argv)
                 else
                 {
                     // TLB miss, PageTable miss
-                    printf("\nTLB miss, PT miss\n");
+                    // printf("\nTLB miss, PT miss\n");
                     tlbHit = false;
                     ptHit = false;
 
@@ -339,45 +343,45 @@ int main(int argc, char **argv)
                     // if using cache
                     if (tlbCapacity > 0)
                     {
-                    
-                        uint32_t oldestKey;                    // VPN
-                        uint32_t oldestValue;                  // access time
+
+                        uint32_t oldestKey;   // VPN
+                        uint32_t oldestValue; // access time
 
                         // if TLB is full
-                        if (TLB.size() == tlbCapacity) {
-                            
-                            if (tlbCapacity > lruCapacity) {
+                        if (TLB.size() == tlbCapacity)
+                        {
+
+                            if (tlbCapacity > lruCapacity)
+                            {
 
                                 // find oldest VPN in LRU
                                 oldestValue = pageTable->addressCount; // start with current access time
                                 for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                                 {
-                                    if (iter->second < oldestValue) {
+                                    if (iter->second < oldestValue)
+                                    {
                                         oldestValue = iter->second;
                                         oldestKey = iter->first;
                                     }
-
-                                    std::cout << "Oldest Key: " << std::hex << oldestKey << std::endl;
                                 }
-
-                                
-                            } else {
+                            }
+                            else
+                            {
                                 // find oldest VPN in LRU
                                 oldestValue = pageTable->addressCount; // start with current access time
                                 for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
                                 {
-                                    if (LRU[iter->first] < oldestValue) {
+                                    if (LRU[iter->first] < oldestValue)
+                                    {
                                         oldestKey = iter->first;
                                         oldestValue = LRU[iter->first];
                                     }
                                 }
                             }
 
-                            
-
                             // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
-                            printf("Erasing from TLB: %08X\n", oldestKey);
+                            // printf("Erasing from TLB: %08X\n", oldestKey);
                         }
 
                         // if LRU is full and VPN doesn't already exist in LRU
@@ -395,29 +399,28 @@ int main(int argc, char **argv)
                                     oldestKey = iter->first;    // update oldest VPN
                                     oldestValue = iter->second; // update oldest access time
                                 }
-
                             }
 
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
-                            printf("Erasing from LRU: %08X\n", oldestKey);
+                            // printf("Erasing from LRU: %08X\n", oldestKey);
                         }
 
                         // insert found VPN->PFN into TLB and LRU
                         TLB[VPN] = newFrame;
                         LRU[VPN] = pageTable->addressCount;
 
-                        printf("Updating/Inserting in TLB: %08X\n", VPN);
-                        printf("Updating/Inserting in LRU: %08X\n", VPN);
+                        // printf("Updating/Inserting in TLB: %08X\n", VPN);
+                        // printf("Updating/Inserting in LRU: %08X\n", VPN);
                     }
 
                     newFrame++;
-                }   
+                }
             }
 
-            printf("\n");
-            printTLB(TLB);
-            printLRU(LRU);
+            // printf("\n");
+            // printTLB(TLB);
+            // printLRU(LRU);
 
             physicalAddress = (PFN * pageSize) + offset;
 
