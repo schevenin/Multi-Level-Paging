@@ -19,15 +19,11 @@
 #ifdef __cplusplus
 /* C++ includes */
 #include <stdint.h>
-#include <stdio.h>
 #else
 /* C includes */
 #include <inttypes.h>
 #include <stdbool.h>
 #endif 
-
-#define DEFAULTOUTPUTTYPE "summary"
-//defines which output is being used
 
 /*
  * structure that can be used to maintain which output types are enabled.
@@ -36,14 +32,14 @@
  * If compiled with a C compiler, make sure that the C99 dialect or later is used.
  * (-std=c99 with a GNU C compiler)
  */
-struct OutputOptionsType {
+typedef struct {
   bool bitmasks;  /* display bitmaks */
   bool virtual2physical;  /* show virtual to physical address translation */
   bool v2p_tlb_pt; /* show virtual to physical address translation using TLB then Pagetable walk (if TLB miss)*/
   bool vpn2pfn;  /* show mapping between page numbers and frame */
   bool offset; /* show the offset of each address */
   bool summary; /* summary statistics */
-};
+} OutputOptionsType;
 
 /* functions for outputting lines */
 /*
