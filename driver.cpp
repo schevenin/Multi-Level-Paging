@@ -8,6 +8,25 @@
 #include <fstream>
 #include <unistd.h>
 
+
+void printTLB(std::map<uint32_t, uint32_t> TLB) {
+    printf("TLB: \n");
+    for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
+    {
+        printf("<%08X,%d>\n", iter->first, iter->second);
+    }
+    printf("\n");
+};
+
+void printLRU(std::map<uint32_t, uint32_t> LRU) {
+    printf("LRU: \n");
+    for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+    {
+        printf("<%08X,%d>\n", iter->first, iter->second);
+    }
+    printf("\n");
+};
+
 /**
  * @brief Main Execution of Multi Level Paging with TLB Cache
  * 
@@ -160,22 +179,21 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShiftPerLevel[i]);
             }
 
-            printf("=================\n");
+
+            printf("====================\n");
             printf("VPN: %08X\n", VPN);
 
             // found VPN in TLB
             if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0) 
             {
                 // TLB hit
+                printf("\nTLB hit\n");
                 tlbHit = true;
                 ptHit = false;
                 cacheHits += 1;
 
-                // printf("TLB Hit\n");
-
                 // PFN from TLB
                 PFN = TLB[VPN];
-
 
                 // if TLB > LRU
                 // if LRU does not contain VPN
@@ -203,12 +221,13 @@ int main(int argc, char **argv)
 
                         // erase oldest from LRU
                         LRU.erase(oldestKey);
+                        printf("Erasing from LRU: %08X\n", oldestKey);
                     }
                 } 
 
                 // update LRU with most recent addressCount
                 LRU[VPN] = pageTable->addressCount;
-                
+                printf("Updating/Inserting in LRU: %08X\n", VPN);
             }
 
             // not found in TLB
@@ -224,6 +243,7 @@ int main(int argc, char **argv)
                 {
 
                     // TLB miss, PageTable hit
+                    printf("\nTLB miss, PT hit\n");
                     tlbHit = false;
                     ptHit = true;
                     pageTable->pageTableHits += 1;
@@ -254,20 +274,23 @@ int main(int argc, char **argv)
 
                             // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
+                            printf("Erasing from TLB: %08X\n", oldestKey);
                         }
 
-                        // if LRU is full
-                        if (LRU.size() == lruCapacity) 
+                        // if LRU is full and VPN doesn't already exist in LRU
+                        if ((LRU.size() == lruCapacity) && (LRU[VPN] == NULL))
                         {
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
+                            printf("Erasing from LRU: %08X\n", oldestKey);
                         }
 
                         // insert found VPN->PFN into TLB and LRU
                         TLB[VPN] = found->frame;
                         LRU[VPN] = pageTable->addressCount;
 
-
+                        printf("Updating/Inserting in TLB: %08X\n", VPN);
+                        printf("Updating/Inserting in LRU: %08X\n", VPN);
                     }
                 }
 
@@ -275,7 +298,7 @@ int main(int argc, char **argv)
                 else
                 {
                     // TLB miss, PageTable miss
-
+                    printf("\nTLB miss, PT miss\n");
                     tlbHit = false;
                     ptHit = false;
 
@@ -309,24 +332,32 @@ int main(int argc, char **argv)
 
                             // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
+                            printf("Erasing from TLB: %08X\n", oldestKey);
                         }
 
-                        // if LRU is full
-                        if (LRU.size() == lruCapacity) 
+                        // if LRU is full and VPN doesn't already exist in LRU
+                        if ((LRU.size() == lruCapacity) && (LRU[VPN] == NULL))
                         {
                             // erase oldest from LRU
                             LRU.erase(oldestKey);
+                            printf("Erasing from LRU: %08X\n", oldestKey);
                         }
 
                         // insert found VPN->PFN into TLB and LRU
                         TLB[VPN] = newFrame;
                         LRU[VPN] = pageTable->addressCount;
+
+                        printf("Updating/Inserting in TLB: %08X\n", VPN);
+                        printf("Updating/Inserting in LRU: %08X\n", VPN);
                     }
 
                     newFrame++;
                 }   
-
             }
+
+            printf("\n");
+            printTLB(TLB);
+            printLRU(LRU);
 
             physicalAddress = (PFN * pageSize) + offset;
 
