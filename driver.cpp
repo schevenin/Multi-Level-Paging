@@ -260,13 +260,29 @@ int main(int argc, char **argv)
                         // if TLB is full
                         if (TLB.size() == tlbCapacity) {
                             
-                            // find oldest VPN in LRU
-                            oldestValue = pageTable->addressCount; // start with current access time
-                            for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
-                            {
-                                if (LRU[iter->first] < oldestValue) {
-                                    oldestKey = iter->first;
-                                    oldestValue = LRU[iter->first];
+                            if (tlbCapacity > lruCapacity) {
+
+                                // find oldest VPN in LRU
+                                oldestValue = pageTable->addressCount; // start with current access time
+                                for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                                {
+                                    if (iter->second < oldestValue) {
+                                        oldestValue = iter->second;
+                                        oldestKey = iter->first;
+                                    }
+
+                                    std::cout << "Oldest Key: " << std::hex << oldestKey << std::endl;
+                                }
+
+                            } else {
+                                // find oldest VPN in LRU
+                                oldestValue = pageTable->addressCount; // start with current access time
+                                for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
+                                {
+                                    if (LRU[iter->first] < oldestValue) {
+                                        oldestKey = iter->first;
+                                        oldestValue = LRU[iter->first];
+                                    }
                                 }
                             }
 
@@ -330,15 +346,34 @@ int main(int argc, char **argv)
                         // if TLB is full
                         if (TLB.size() == tlbCapacity) {
                             
-                            // find oldest VPN in LRU
-                            oldestValue = pageTable->addressCount; // start with current access time
-                            for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
-                            {
-                                if (LRU[iter->first] < oldestValue) {
-                                    oldestKey = iter->first;
-                                    oldestValue = LRU[iter->first];
+                            if (tlbCapacity > lruCapacity) {
+
+                                // find oldest VPN in LRU
+                                oldestValue = pageTable->addressCount; // start with current access time
+                                for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                                {
+                                    if (iter->second < oldestValue) {
+                                        oldestValue = iter->second;
+                                        oldestKey = iter->first;
+                                    }
+
+                                    std::cout << "Oldest Key: " << std::hex << oldestKey << std::endl;
+                                }
+
+                                
+                            } else {
+                                // find oldest VPN in LRU
+                                oldestValue = pageTable->addressCount; // start with current access time
+                                for (std::map<uint32_t, uint32_t>::iterator iter = TLB.begin(); iter != TLB.end(); ++iter)
+                                {
+                                    if (LRU[iter->first] < oldestValue) {
+                                        oldestKey = iter->first;
+                                        oldestValue = LRU[iter->first];
+                                    }
                                 }
                             }
+
+                            
 
                             // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
