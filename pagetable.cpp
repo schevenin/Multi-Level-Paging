@@ -117,7 +117,7 @@ int countPageTableSize(PageTable *pageTable, Level *level)
    // for every possible entry in level
    for (int i = 0; i < entryCount; i++)
    {
-      // get the size of the next level
+      // get the size of the next level if it exists
       if (level->nextLevel[i] != NULL) {
          sum += countPageTableSize(pageTable, level->nextLevel[i]);
       }

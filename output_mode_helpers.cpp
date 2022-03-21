@@ -1,13 +1,10 @@
-#include <stdio.h>
 #include "output_mode_helpers.h"
 
 /* Handle C++ namespaces, ignore if compiled in C 
  * C++ usually uses this #define to declare the C++ standard.
  * It will not be defined if a C compiler is used.
  */
-#ifdef __cplusplus
 using namespace std;
-#endif
 
 /*
  * report_virtual2physical(src, dest)
