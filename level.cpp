@@ -1,8 +1,18 @@
-#include "pagetable.h"
+/**
+ * @file level.cpp
+ * @author Rogelio Schevenin, Sawyer Thompson
+ * @redID 824107681, 823687079
+ * @brief Implements functions to build level
+ * @date 2022-03-21
+ */
+
+#include "level.h"
+
+#define DEFAULTMAPVALUES -1 // default values for mapping
 
 /**
  * @brief Recursively performs an insertion of a VPN->VPN mapping in PageTable
- * 
+ *
  * @param pageTable Level to insert from
  * @param virtualAddress Virtual address to insert
  * @param newFrame New frame to assign the inserted virtual address
@@ -16,19 +26,19 @@ void pageInsert(Level *level, uint32_t virtualAddress, uint32_t newFrame)
     // if leaf node
     if (currentDepth == (level->pageTable->numLevels) - 1)
     {
-        level->isLeaf = true; // set level as leaf
+        level->isLeaf = true; // set level as leaf node
 
         // if mappings in level are all NULL
         if (level->mappings == NULL)
         {
             level->mappings = new Map[level->pageTable->entriesPerLevel[currentDepth]]; // create new array of mappings of appropriate size
 
-            // initialize new mappings array to invalid -1's
-            // ensures that vpn 0/NULL isn't mistakenly found
+            // initialize new mappings array to invalid values
+            // ensures that a VPN 0/NULL isn't mistakenly found
             for (int i = 0; i < level->pageTable->entriesPerLevel[currentDepth]; i++)
             {
-                level->mappings[i].vpn = -1;
-                level->mappings[i].frame = -1;
+                level->mappings[i].vpn = DEFAULTMAPVALUES;
+                level->mappings[i].frame = DEFAULTMAPVALUES;
             }
         }
 

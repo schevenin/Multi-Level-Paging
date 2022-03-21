@@ -1,20 +1,25 @@
+/**
+ * @file pagetable.h
+ * @author Rogelio Schevenin, Sawyer Thompson
+ * @redID 824107681, 823687079
+ * @brief Header containing PageTable structure
+ * @date 2022-03-21
+ */
+
 #ifndef PAGETABLE_H
 #define PAGETABLE_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <vector>
-#include <iostream>
-
 #include "level.h"
-#include "tracereader.h"
-#include "output_mode_helpers.h"
 
-#define DEFAULTADDRLIMIT -1
-#define DEFAULTSIZE 32
-#define DEFAULTTLBSIZE 0
-#define DEFAULTLRUSIZE 10
+#define DEFAULTADDRLIMIT -1 // default limit to number of addresses to process
+#define DEFAULTSIZE 32      // default number of bits in address
+#define DEFAULTTLBSIZE 0    // default TLB size
+#define DEFAULTLRUSIZE 10   // default LRU size
 
+/**
+ * @brief PageTable structure
+ * Stores PageTable attributes
+ */
 struct PageTable
 {
   struct Level *rootLevelPtr; // pointer to level struct

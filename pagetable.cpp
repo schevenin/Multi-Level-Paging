@@ -1,3 +1,11 @@
+/**
+ * @file pagetable.cpp
+ * @author Rogelio Schevenin, Sawyer Thompson
+ * @redID 824107681, 823687079
+ * @brief Implements PageTable functions
+ * @date 2022-03-21
+ */
+
 #include "pagetable.h"
 
 /**
@@ -75,7 +83,7 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame
       // initialize next level entries to NULL
       for (int i = 0; i < size; i++)
       {
-         nextLevel[i] = nullptr;
+         nextLevel[i] = NULL;
       }
 
       newLevel->nextLevel = nextLevel;             // assign NULL entries to new level

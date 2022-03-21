@@ -1,12 +1,22 @@
-#include "pagetable.h"
-#include "output_mode_helpers.h"
-#include "string.h"
+/**
+ * @file driver.cpp
+ * @author Rogelio Schevenin, Sawyer Thompson
+ * @redID 824107681, 823687079
+ * @brief Multi Level Paging with TLB Cache entry point
+ * @date 2022-03-21
+ */
 
-#include <unordered_map>
-#include <map>
-#include <math.h>
+#include <iostream>
+#include <stdio.h>
 #include <fstream>
-#include <unistd.h>
+#include <string.h>
+#include <math.h>
+#include <map>
+#include <ctype.h>
+
+#include "tracereader.h"
+#include "output_mode_helpers.h"
+#include "pagetable.h"
 
 /**
  * @brief Main Execution of Multi Level Paging with TLB Cache
@@ -17,28 +27,28 @@
  */
 int main(int argc, char **argv)
 {
-    PageTable *pageTable;             // instantiate page table
-    OutputOptionsType *output;        // instantiate output object
-    std::map<uint32_t, uint32_t> TLB; // instantiate map of <VPN, PFN>
-    std::map<uint32_t, uint32_t> LRU; // instantiate map of <VPN, Access Time>
-    FILE *tracefile;                  // instantiate tracefile
+    PageTable *pageTable;                      // instantiate page table
+    OutputOptionsType *output;                 // instantiate output object
+    std::map<uint32_t, uint32_t> TLB;          // instantiate map of <VPN, PFN>
+    std::map<uint32_t, uint32_t> LRU;          // instantiate map of <VPN, Access Time>
+    FILE *tracefile;                           // instantiate tracefile
 
-    uint32_t physicalAddress; // instantiate physical address
-    uint32_t VPN;             // instantiate virtual page number
-    uint32_t offset;          // instantiate offset
-    uint32_t PFN;             // instantiate page frame number
-    uint32_t newFrame;        // instantiate new frame
+    uint32_t physicalAddress;                  // instantiate physical address
+    uint32_t VPN;                              // instantiate virtual page number
+    uint32_t offset;                           // instantiate offset
+    uint32_t PFN;                              // instantiate page frame number
+    uint32_t newFrame;                         // instantiate new frame
 
-    int pageSize;               // instantiate page size
-    int addressProcessingLimit; // instantiate address limit
-    int tlbCapacity;            // instantiate size of TLB
-    int lruCapacity;            // instantiate size of LRU
-    int cacheHits;              // instantiate cache hits
+    int pageSize;                              // instantiate page size
+    int addressProcessingLimit;                // instantiate address limit
+    int tlbCapacity;                           // instantiate size of TLB
+    int lruCapacity;                           // instantiate size of LRU
+    int cacheHits;                             // instantiate cache hits
 
-    bool tlbHit; // instantiate TLB is hit
-    bool ptHit;  // instantiate page table is hit
+    bool tlbHit;                               // instantiate TLB is hit
+    bool ptHit;                                // instantiate page table is hit
 
-    const char *outputType; // instantiate type of output
+    const char *outputType;                    // instantiate type of output
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
@@ -54,24 +64,38 @@ int main(int argc, char **argv)
     {
         switch (opt)
         {
+        // sets number of addresses needed to go through
         case 'n':
-            // sets number of addresses needed to go through
             addressProcessingLimit = atoi(optarg);
-            break;
-        case 'c':
-            // gets cache capacity of adresses
-            tlbCapacity = atoi(optarg);
 
-            // verify valid cache capacity
-            if (tlbCapacity < 0)
+            // verify address limit is a number
+            for (int i = 0; optarg[i] != 0; i++)
             {
-                fprintf(stderr, "Cache capacity must be a number, greater than or equal to 0");
-                exit(EXIT_FAILURE);
+                if (!isdigit(optarg[i]))
+                {
+                    std::cout << "Incorrect address processing limit--should be a number." << std::endl;
+                    exit(EXIT_FAILURE);
+                }
             }
 
             break;
+        // gets cache capacity of adresses
+        case 'c':
+            tlbCapacity = atoi(optarg);
+
+            // verify cache input is a number and verify valid cache capacity
+            for (int i = 0; optarg[i] != 0; i++)
+            {
+                if ((!isdigit(optarg[i])) || (tlbCapacity < 0))
+                {
+                    std::cout << "Cache capacity must be a number, greater than or equal to 0" << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+            }
+            
+            break;
+        // gets type of output
         case 'o':
-            // gets type of output
             outputType = optarg;
             break;
         default:
@@ -125,8 +149,8 @@ int main(int argc, char **argv)
     }
 
     pageSize = pow(2, pageTable->offsetSize);                                            // set page size
-    pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // vpn mask
-    pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // offset mask
+    pageTable->vpnMask = ((1 << pageTable->totalPageBits) - 1) << pageTable->offsetSize; // set vpn mask
+    pageTable->offsetMask = (1 << pageTable->offsetSize) - 1;                            // set offset mask
     pageTable->pageLookupMask = new uint32_t[pageTable->numLevels];                      // array of page lookup masks
     pageTable->pageLookup = new uint32_t[pageTable->numLevels];                          // array of page lookup masks
 
@@ -137,19 +161,19 @@ int main(int argc, char **argv)
     }
 
     pageTable->addressCount = 0; // keep track of addresses processed from tracefile
-    newFrame = 0;                // keep track of new frames mappend
+    newFrame = 0;                // keep track of new frames mapped
     cacheHits = 0;               // keep track of amount of cache hits
 
     // process each address in tracefile until address limit is reached
     while (!feof(tracefile) && pageTable->addressCount != addressProcessingLimit)
     {
         // next address
-        p2AddrTr *address_trace = new p2AddrTr(); // instantiate and address trace
+        p2AddrTr *address_trace = new p2AddrTr(); // instantiate address trace
 
         // if another address exists
         if (NextAddress(tracefile, address_trace))
         {
-            pageTable->addressCount++;                                                                     // count addresses processed
+            pageTable->addressCount++;                                                                     // increment addresses processed
             VPN = virtualAddressToPageNum(address_trace->addr, pageTable->vpnMask, pageTable->offsetSize); // find address VPN
             offset = virtualAddressToPageNum(address_trace->addr, pageTable->offsetMask, 0);               // find address offset
 
@@ -207,7 +231,6 @@ int main(int argc, char **argv)
                 // VPN exists in PageTable
                 if (found != NULL)
                 {
-
                     // TLB miss, PageTable hit
                     tlbHit = false;
                     ptHit = true;
@@ -234,8 +257,8 @@ int main(int argc, char **argv)
                 // if using cache
                 if (tlbCapacity > 0)
                 {
-                    uint32_t oldestKey;   // VPN
-                    uint32_t oldestValue; // access time
+                    uint32_t oldestKey;   // oldest VPN
+                    uint32_t oldestValue; // oldest access time
 
                     // if TLB is full
                     if (TLB.size() == tlbCapacity)
@@ -298,7 +321,7 @@ int main(int argc, char **argv)
                     // if VPN found in PageTable
                     if (ptHit)
                     {
-                        // insert found VPN->PFN into TLB and LRU
+                        // insert found VPN->PFN mapping into TLB and LRU
                         TLB[VPN] = found->frame;
                         LRU[VPN] = pageTable->addressCount;
                     }
@@ -306,12 +329,13 @@ int main(int argc, char **argv)
                     // if VPN was not found in PageTable
                     else
                     {
+                        // insert new VPN->PFN mapping into TLB and LRU
                         TLB[VPN] = newFrame;
                         LRU[VPN] = pageTable->addressCount;
                     }
                 }
 
-                // update frame if PageTable was not hit
+                // update new frame counter if PageTable was not hit
                 if (!ptHit)
                 {
                     newFrame++;
