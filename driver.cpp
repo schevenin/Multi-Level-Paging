@@ -160,19 +160,55 @@ int main(int argc, char **argv)
                 pageTable->pageLookup[i] = virtualAddressToPageNum(address_trace->addr, pageTable->pageLookupMask[i], pageTable->bitShiftPerLevel[i]);
             }
 
+            printf("=================\n");
+            printf("VPN: %08X\n", VPN);
+
             // found VPN in TLB
-            if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0)
+            if (TLB.find(VPN) != TLB.end() && tlbCapacity > 0) 
             {
                 // TLB hit
                 tlbHit = true;
                 ptHit = false;
                 cacheHits += 1;
 
+                // printf("TLB Hit\n");
+
                 // PFN from TLB
                 PFN = TLB[VPN];
 
+
+                // if TLB > LRU
+                // if LRU does not contain VPN
+                if (LRU[VPN] == NULL) {
+
+                    // if LRU is full, remove least recently used
+                    if (LRU.size() == lruCapacity) {
+                    
+                        // remove least recently used
+                        uint32_t oldestKey;                    // VPN
+                        uint32_t oldestValue;                  // access time
+                        oldestValue = pageTable->addressCount; // start with current access time
+
+                        // find oldest VPN in LRU
+                        for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
+                        {
+
+                            // LRU access time is older than current access time
+                            if (oldestValue > iter->second)
+                            {
+                                oldestKey = iter->first;    // update oldest VPN
+                                oldestValue = iter->second; // update oldest access time
+                            }
+                        }
+
+                        // erase oldest from LRU
+                        LRU.erase(oldestKey);
+                    }
+                } 
+
                 // update LRU with most recent addressCount
                 LRU[VPN] = pageTable->addressCount;
+                
             }
 
             // not found in TLB
@@ -183,7 +219,7 @@ int main(int argc, char **argv)
                 // search PageTable for VPN
                 Map *found = pageLookup(pageTable, address_trace->addr);
 
-                // found exists in PageTable
+                // VPN exists in PageTable
                 if (found != NULL)
                 {
 
@@ -198,14 +234,14 @@ int main(int argc, char **argv)
                     // if using cache
                     if (tlbCapacity > 0)
                     {
-                        // check if cache is full
-                        if (TLB.size() == tlbCapacity)
-                        {
-                            uint32_t oldestKey;                    // VPN
-                            uint32_t oldestValue;                  // access time
-                            oldestValue = pageTable->addressCount; // start with current access time
+                        uint32_t oldestKey;                    // VPN
+                        uint32_t oldestValue;                  // access time
 
+                        // if TLB is full
+                        if (TLB.size() == tlbCapacity) {
+                            
                             // find oldest VPN in LRU
+                            oldestValue = pageTable->addressCount; // start with current access time
                             for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                             {
                                 // LRU access time is older than current access time
@@ -216,10 +252,15 @@ int main(int argc, char **argv)
                                 }
                             }
 
-                            // erase oldest from TLB and LRU
+                            // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
-                            LRU.erase(oldestKey);
+                        }
 
+                        // if LRU is full
+                        if (LRU.size() == lruCapacity) 
+                        {
+                            // erase oldest from LRU
+                            LRU.erase(oldestKey);
                         }
 
                         // insert found VPN->PFN into TLB and LRU
@@ -230,7 +271,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                // inserting VPN into PageTable
+                // VPN doesn't exist in PageTable
                 else
                 {
                     // TLB miss, PageTable miss
@@ -247,17 +288,17 @@ int main(int argc, char **argv)
                     // if using cache
                     if (tlbCapacity > 0)
                     {
-                        // check if cache is full
-                        if (TLB.size() == tlbCapacity)
-                        {
-                            uint32_t oldestKey;                    // VPN
-                            uint32_t oldestValue;                  // access time
-                            oldestValue = pageTable->addressCount; // start with current access time
+                    
+                        uint32_t oldestKey;                    // VPN
+                        uint32_t oldestValue;                  // access time
 
+                        // if TLB is full
+                        if (TLB.size() == tlbCapacity) {
+                            
                             // find oldest VPN in LRU
+                            oldestValue = pageTable->addressCount; // start with current access time
                             for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                             {
-
                                 // LRU access time is older than current access time
                                 if (oldestValue > iter->second)
                                 {
@@ -266,8 +307,14 @@ int main(int argc, char **argv)
                                 }
                             }
 
-                            // erase oldest from TLB and LRU
+                            // erase oldest VPN from TLB
                             TLB.erase(oldestKey);
+                        }
+
+                        // if LRU is full
+                        if (LRU.size() == lruCapacity) 
+                        {
+                            // erase oldest from LRU
                             LRU.erase(oldestKey);
                         }
 
