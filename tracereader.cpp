@@ -75,7 +75,7 @@ int NextAddress(FILE *trace_file, p2AddrTr *addr_ptr) {
  */
 void AddressDecoder(p2AddrTr *addr_ptr, FILE *out) {
   
-  fprintf(out, "%08lx ", addr_ptr->addr);	/* address */
+  fprintf(out, "%08x ", addr_ptr->addr);	/* address */
   /* what type of address request */
   switch (addr_ptr->reqtype) {
     case FETCH:
@@ -136,7 +136,7 @@ void AddressDecoder(p2AddrTr *addr_ptr, FILE *out) {
      process
      timestamp
   */
-  fprintf(out, "%2d\t%02x\t%1d\t%08lx\n", addr_ptr->size, addr_ptr->attr,
+  fprintf(out, "%2d\t%02x\t%1d\t%08x\n", addr_ptr->size, addr_ptr->attr,
 	  addr_ptr->proc, addr_ptr->time);
 }
 
