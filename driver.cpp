@@ -204,8 +204,8 @@ int main(int argc, char **argv)
                     // find oldest VPN in LRU
                     for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                     {
-                        // VPN access time is older than current access time and not VPN to be inserted
-                        if ((iter->second < oldestValue) && (iter->second))
+                        // VPN access time exists (not NULL) and is older than last oldest
+                        if ((iter->second) && (iter->second < oldestValue))
                         {
                             oldestKey = iter->first;    // update oldest VPN
                             oldestValue = iter->second; // update oldest access time
@@ -270,8 +270,8 @@ int main(int argc, char **argv)
                             oldestValue = pageTable->addressCount; // start with current access time
                             for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                             {
-                                // if next access time in LRU is older
-                                if (iter->second < oldestValue)
+                                // VPN access time exists (not NULL) and is older than last oldest
+                                if ((iter->second) && (iter->second < oldestValue))
                                 {
                                     oldestValue = iter->second;
                                     oldestKey = iter->first;
@@ -306,8 +306,8 @@ int main(int argc, char **argv)
                         oldestValue = pageTable->addressCount; // start with current access time
                         for (std::map<uint32_t, uint32_t>::iterator iter = LRU.begin(); iter != LRU.end(); ++iter)
                         {
-                            // VPN access time is older than current access time and not VPN to be inserted
-                            if ((iter->second < oldestValue) && (iter->second))
+                            // VPN access time exists (not NULL) and is older than last oldest
+                            if ((iter->second) && (iter->second < oldestValue))
                             {
                                 oldestKey = iter->first;    // update oldest VPN
                                 oldestValue = iter->second; // update oldest access time
