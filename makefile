@@ -9,8 +9,8 @@ CXX=g++ -g
 #	-g          include information for symbolic debugger e.g. gdb 
 CXXFLAGS=-std=c++11 -g
 
-a.out : driver.o tracereader.o output_mode_helpers.o pagetable.o level.o
-	$(CXX) $(CXXFLAGS) -o a.out $^
+pagingwithtlb : driver.o tracereader.o output_mode_helpers.o pagetable.o level.o
+	$(CXX) $(CXXFLAGS) -o pagingwithtlb $^
 output_mode_helpers.o : output_mode_helpers.cpp
 tracereader.o : tracereader.h tracereader.cpp 
 pagetable.o: tracereader.h pagetable.h pagetable.cpp
