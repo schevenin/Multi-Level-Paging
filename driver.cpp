@@ -18,6 +18,8 @@
 #include "output_mode_helpers.h"
 #include "pagetable.h"
 
+#define TOTALPAGEBITSMAX 28
+
 /**
  * @brief Main Execution of Multi Level Paging with TLB Cache
  *
@@ -27,28 +29,28 @@
  */
 int main(int argc, char **argv)
 {
-    PageTable *pageTable;                      // instantiate page table
-    OutputOptionsType *output;                 // instantiate output object
-    std::map<uint32_t, uint32_t> TLB;          // instantiate map of <VPN, PFN>
-    std::map<uint32_t, uint32_t> LRU;          // instantiate map of <VPN, Access Time>
-    FILE *tracefile;                           // instantiate tracefile
+    PageTable *pageTable;             // instantiate page table
+    OutputOptionsType *output;        // instantiate output object
+    std::map<uint32_t, uint32_t> TLB; // instantiate map of <VPN, PFN>
+    std::map<uint32_t, uint32_t> LRU; // instantiate map of <VPN, Access Time>
+    FILE *tracefile;                  // instantiate tracefile
 
-    uint32_t physicalAddress;                  // instantiate physical address
-    uint32_t VPN;                              // instantiate virtual page number
-    uint32_t offset;                           // instantiate offset
-    uint32_t PFN;                              // instantiate page frame number
-    uint32_t newFrame;                         // instantiate new frame
+    uint32_t physicalAddress; // instantiate physical address
+    uint32_t VPN;             // instantiate virtual page number
+    uint32_t offset;          // instantiate offset
+    uint32_t PFN;             // instantiate page frame number
+    uint32_t newFrame;        // instantiate new frame
 
-    int pageSize;                              // instantiate page size
-    int addressProcessingLimit;                // instantiate address limit
-    int tlbCapacity;                           // instantiate size of TLB
-    int lruCapacity;                           // instantiate size of LRU
-    int cacheHits;                             // instantiate cache hits
+    int pageSize;               // instantiate page size
+    int addressProcessingLimit; // instantiate address limit
+    int tlbCapacity;            // instantiate size of TLB
+    int lruCapacity;            // instantiate size of LRU
+    int cacheHits;              // instantiate cache hits
 
-    bool tlbHit;                               // instantiate TLB is hit
-    bool ptHit;                                // instantiate page table is hit
+    bool tlbHit; // instantiate TLB is hit
+    bool ptHit;  // instantiate page table is hit
 
-    const char *outputType;                    // instantiate type of output
+    const char *outputType; // instantiate type of output
 
     pageTable = new PageTable();               // initialize page table
     output = new OutputOptionsType();          // initialize output object
@@ -92,7 +94,7 @@ int main(int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
             }
-            
+
             break;
         // gets type of output
         case 'o':
@@ -118,10 +120,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    pageTable->numLevels = argc - optind;                        // get number of levels in page table
-    pageTable->bitsPerLevel = new int[pageTable->numLevels];     // create array to store bit count per level
-    pageTable->bitShiftPerLevel = new int[pageTable->numLevels]; // create array to store bit shift per level
-    pageTable->entriesPerLevel = new int[pageTable->numLevels];  // create array to store entry counts per level
+    pageTable->numLevels = argc - optind;                             // get number of levels in page table
+    pageTable->bitsPerLevel = new uint32_t[pageTable->numLevels];     // create array to store bit count per level
+    pageTable->bitShiftPerLevel = new uint32_t[pageTable->numLevels]; // create array to store bit shift per level
+    pageTable->entriesPerLevel = new uint32_t[pageTable->numLevels];  // create array to store entry counts per level
 
     // loop through each page level argument
     for (int i = optind; i < argc; i++)
@@ -138,7 +140,7 @@ int main(int argc, char **argv)
         pageTable->totalPageBits += atoi(argv[i]);                                            // store total bits
 
         // verify valid bit sizes
-        if ((pageTable->totalPageBits) > 28)
+        if ((pageTable->totalPageBits) > TOTALPAGEBITSMAX)
         {
             std::cout << "Too many bits used in page tables" << std::endl;
             exit(EXIT_FAILURE);

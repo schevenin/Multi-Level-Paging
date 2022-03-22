@@ -10,7 +10,7 @@
 
 /**
  * @brief Recursively performs a lookup of a VPN->PFN mapping in PageTable
- * 
+ *
  * @param pageTable PageTable object
  * @param virtualAddress Virtual address to be searched for.
  * @return Map* Mapping of found VPN->PFN
@@ -56,7 +56,7 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress)
 
 /**
  * @brief Recursively performs an insertion of a VPN->VPN mapping in PageTable
- * 
+ *
  * @param pageTable PageTable object
  * @param virtualAddress Virtual address to insert
  * @param newFrame New frame to assign the inserted virtual address
@@ -86,15 +86,15 @@ void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame
          nextLevel[i] = NULL;
       }
 
-      newLevel->nextLevel = nextLevel;             // assign NULL entries to new level
-      pageTable->rootLevelPtr = newLevel;          // assign pointer to root level in PageTable
+      newLevel->nextLevel = nextLevel;                // assign NULL entries to new level
+      pageTable->rootLevelPtr = newLevel;             // assign pointer to root level in PageTable
       pageInsert(newLevel, virtualAddress, newFrame); // insert root level
    }
 }
 
 /**
  * @brief Applies masking and shifting of a given address
- * 
+ *
  * @param virtualAddress Virtual address to mask and shift
  * @param mask Mask (&) to apply to virtual address
  * @param shift Amount of bits to shift virtual address
@@ -109,7 +109,7 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
 
 /**
  * @brief Recursively counts the size in bytes of a PageTable
- * 
+ *
  * @param pageTable PageTable object to count
  * @param level Level to begin counting
  * @return int Total count in bytes
@@ -120,13 +120,14 @@ uint32_t countPageTableSize(PageTable *pageTable, Level *level)
    sum += sizeof(level); // get size of current level
 
    uint32_t entryCount = pageTable->entriesPerLevel[level->depth]; // possible number of entries in current level
-   sum += entryCount * 8; // regardless of exterior or interior level, add entries in bytes
+   sum += entryCount * 8;                                          // regardless of exterior or interior level, add entries in bytes
 
    // for every possible entry in level
    for (int i = 0; i < entryCount; i++)
    {
       // get the size of the next level if it exists
-      if (level->nextLevel[i] != NULL) {
+      if (level->nextLevel[i] != NULL)
+      {
          sum += countPageTableSize(pageTable, level->nextLevel[i]);
       }
    }
