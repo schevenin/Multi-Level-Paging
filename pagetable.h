@@ -46,6 +46,6 @@ Map *pageLookup(PageTable *pageTable, uint32_t virtualAddress);                 
 void pageInsert(PageTable *pageTable, uint32_t virtualAddress, uint32_t newFrame);        // recursively performs an insertion of a VPN->VPN mapping in PageTable
 void pageInsert(PageTable *level, uint32_t virtualAddress, uint32_t newFrame);            // recursively performs an insertion of a VPN->VPN mapping in PageTable
 uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_t shift); // applies masking and shifting of a given address
-int countPageTableSize(PageTable *pageTable, Level *level);                               // recursively counts the size in bytes of a PageTable
+uint32_t countPageTableSize(PageTable *pageTable, Level *level);                               // recursively counts the size in bytes of a PageTable
 
 #endif

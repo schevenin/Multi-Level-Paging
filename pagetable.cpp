@@ -114,12 +114,12 @@ uint32_t virtualAddressToPageNum(uint32_t virtualAddress, uint32_t mask, uint32_
  * @param level Level to begin counting
  * @return int Total count in bytes
  */
-int countPageTableSize(PageTable *pageTable, Level *level)
+uint32_t countPageTableSize(PageTable *pageTable, Level *level)
 {
-   int sum = 0;
+   uint32_t sum = 0;
    sum += sizeof(level); // get size of current level
 
-   int entryCount = pageTable->entriesPerLevel[level->depth]; // possible number of entries in current level
+   uint32_t entryCount = pageTable->entriesPerLevel[level->depth]; // possible number of entries in current level
    sum += entryCount * 8; // regardless of exterior or interior level, add entries in bytes
 
    // for every possible entry in level
